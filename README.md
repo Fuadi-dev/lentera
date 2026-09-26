@@ -7,7 +7,7 @@ Sebelum memulai, pastikan sistem Anda memiliki aplikasi berikut:
 - **PHP** (minimal versi 8.2)
 - **Composer** (untuk dependensi PHP)
 - **Node.js & npm** (untuk dependensi frontend Vue/Tailwind)
-- **Database Server** (MySQL/MariaDB, bisa menggunakan Laragon, XAMPP, atau servis lainnya)
+- **Database Server** (PostgreSQL, pastikan sudah terinstall dan berjalan di sistem Anda)
 
 ---
 
@@ -41,14 +41,14 @@ php artisan key:generate
 ```
 
 ### 4. Konfigurasi Database
-Buka file `.env` yang baru saja Anda buat, lalu sesuaikan koneksi database. Misalnya jika menggunakan **Laragon**:
+Buka file `.env` yang baru saja Anda buat, lalu sesuaikan koneksi database untuk menggunakan **PostgreSQL**:
 ```env
-DB_CONNECTION=mysql
+DB_CONNECTION=pgsql
 DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=lentera_db   # Pastikan Anda sudah membuat database kosong bernama lentera_db di Laragon/phpMyAdmin
-DB_USERNAME=root
-DB_PASSWORD=             # Kosongkan jika password default root belum diubah
+DB_PORT=5432
+DB_DATABASE=lentera_db   # Pastikan Anda sudah membuat database kosong bernama lentera_db di pgAdmin/psql
+DB_USERNAME=postgres     # Sesuaikan dengan username PostgreSQL Anda
+DB_PASSWORD=             # Isi dengan password PostgreSQL Anda
 ```
 
 ### 5. Menjalankan Migrasi & Seeder
