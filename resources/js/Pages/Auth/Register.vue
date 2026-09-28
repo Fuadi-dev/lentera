@@ -24,6 +24,13 @@ const submit = () => {
     <GuestLayout>
         <Head title="Register" />
 
+        <div class="mb-6">
+            <h1 class="text-2xl font-bold">Yuk, Buat Akun Dulu!👋</h1>
+            <p class="mt-2 font-normal text-gray-600 text-md">
+                Daftar dan mulai perjalanan belajar yang menyenangkan.
+            </p>
+        </div>
+
         <form @submit.prevent="submit">
             <div>
                 <InputLabel for="name" value="Name" />
@@ -31,7 +38,7 @@ const submit = () => {
                 <TextInput
                     id="name"
                     type="text"
-                    class="mt-1 block w-full"
+                    class="block w-full mt-1"
                     v-model="form.name"
                     required
                     autofocus
@@ -47,7 +54,7 @@ const submit = () => {
                 <TextInput
                     id="email"
                     type="email"
-                    class="mt-1 block w-full"
+                    class="block w-full mt-1"
                     v-model="form.email"
                     required
                     autocomplete="username"
@@ -62,7 +69,7 @@ const submit = () => {
                 <TextInput
                     id="password"
                     type="password"
-                    class="mt-1 block w-full"
+                    class="block w-full mt-1"
                     v-model="form.password"
                     required
                     autocomplete="new-password"
@@ -72,41 +79,34 @@ const submit = () => {
             </div>
 
             <div class="mt-4">
-                <InputLabel
-                    for="password_confirmation"
-                    value="Confirm Password"
-                />
+                <InputLabel for="password_confirmation" value="Konfirmasi Password" />
 
                 <TextInput
                     id="password_confirmation"
                     type="password"
-                    class="mt-1 block w-full"
+                    class="block w-full mt-1"
                     v-model="form.password_confirmation"
                     required
                     autocomplete="new-password"
                 />
 
-                <InputError
-                    class="mt-2"
-                    :message="form.errors.password_confirmation"
-                />
+                <InputError class="mt-2" :message="form.errors.password_confirmation" />
             </div>
 
-            <div class="mt-4 flex items-center justify-end">
-                <Link
-                    :href="route('login')"
-                    class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                >
-                    Already registered?
-                </Link>
-
+            <div class="flex items-center justify-between mt-6">
                 <PrimaryButton
-                    class="ms-4"
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
                 >
                     Register
                 </PrimaryButton>
+
+                <Link
+                    :href="route('login')"
+                    class="text-sm text-gray-600 underline rounded-md hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                >
+                    Sudah punya akun?
+                </Link>
             </div>
         </form>
     </GuestLayout>

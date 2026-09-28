@@ -33,6 +33,13 @@ const submit = () => {
     <GuestLayout>
         <Head title="Log in" />
 
+        <div class="mb-6">
+            <h1 class="text-2xl font-bold">Selamat Datang 👋</h1>
+            <p class="mt-2 font-normal text-gray-600 text-md">
+                Masuk dan temukan pengalaman belajar yang sesuai untukmu.
+            </p>
+        </div>
+
         <div v-if="status" class="mb-4 text-sm font-medium text-green-600">
             {{ status }}
         </div>
@@ -44,7 +51,7 @@ const submit = () => {
                 <TextInput
                     id="email"
                     type="email"
-                    class="mt-1 block w-full"
+                    class="block w-full mt-1"
                     v-model="form.email"
                     required
                     autofocus
@@ -60,7 +67,7 @@ const submit = () => {
                 <TextInput
                     id="password"
                     type="password"
-                    class="mt-1 block w-full"
+                    class="block w-full mt-1"
                     v-model="form.password"
                     required
                     autocomplete="current-password"
@@ -69,30 +76,37 @@ const submit = () => {
                 <InputError class="mt-2" :message="form.errors.password" />
             </div>
 
-            <div class="mt-4 block">
-                <label class="flex items-center">
+            <div class="flex items-center justify-between pt-6">
+                <label class="flex items-center cursor-pointer">
                     <Checkbox name="remember" v-model:checked="form.remember" />
-                    <span class="ms-2 text-sm text-gray-600"
-                        >Remember me</span
-                    >
+                    <span class="text-sm text-gray-600 ms-2">Ingat saya</span>
                 </label>
-            </div>
 
-            <div class="mt-4 flex items-center justify-end">
                 <Link
                     v-if="canResetPassword"
                     :href="route('password.request')"
-                    class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                    class="text-sm text-gray-600 underline rounded-md hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                 >
-                    Forgot your password?
+                    Lupa password?
                 </Link>
+            </div>
+
+            <div class="flex items-center justify-between mt-6">
+                <p class="text-sm text-gray-600">
+                    Belum punya akun?
+                    <Link
+                        :href="route('register')"
+                        class="font-medium underline rounded-md text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                    >
+                        Daftar
+                    </Link>
+                </p>
 
                 <PrimaryButton
-                    class="ms-4"
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
                 >
-                    Log in
+                    Masuk
                 </PrimaryButton>
             </div>
         </form>
