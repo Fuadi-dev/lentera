@@ -12,8 +12,13 @@ export default {
 
     theme: {
         extend: {
+            colors: {
+                secondary: 'var(--secondary)',
+                'secondary-foreground': 'var(--secondary-foreground)',
+                primary: 'var(--primary)',
+            },
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['Manrope', ...defaultTheme.fontFamily.sans],
             },
         },
     },
