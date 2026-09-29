@@ -16,11 +16,11 @@ defineProps({
 </script>
 
 <template>
-    <Head title="Profile" />
+    <Head title="Profil" />
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-2xl font-bold text-black">Profile</h2>
+            <h2 class="text-2xl font-bold text-black">Profil</h2>
         </template>
 
         <div class="pt-6 pb-12">
