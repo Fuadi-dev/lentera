@@ -46,6 +46,21 @@ class AuthController extends Controller
 
     // --- Manual Registration with OTP ---
 
+    public function showRegister()
+    {
+        return \Inertia\Inertia::render('Auth/RegisterOtp');
+    }
+
+    public function showVerifyOtp()
+    {
+        if (!session('registration_email')) {
+            return redirect('/auth/register-otp');
+        }
+        return \Inertia\Inertia::render('Auth/VerifyOtp', [
+            'email' => session('registration_email'),
+        ]);
+    }
+
     public function register(Request $request)
     {
         $request->validate([

@@ -29,7 +29,10 @@ use App\Http\Controllers\AuthController;
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
 
+Route::get('/auth/register-otp', [AuthController::class, 'showRegister'])->name('auth.register.otp.show');
 Route::post('/auth/register-otp', [AuthController::class, 'register'])->name('auth.register.otp');
+
+Route::get('/auth/verify-otp', [AuthController::class, 'showVerifyOtp'])->name('auth.verify.otp.show');
 Route::post('/auth/verify-otp', [AuthController::class, 'verifyOtp'])->name('auth.verify.otp');
 
 require __DIR__.'/auth.php';
