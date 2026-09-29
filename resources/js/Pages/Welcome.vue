@@ -38,7 +38,7 @@ function handleImageError() {
             class="relative flex min-h-screen flex-col items-center justify-center selection:bg-[#FF2D20] selection:text-white"
         >
             <div class="relative w-full max-w-2xl px-6 lg:max-w-7xl">
-                <header class="grid grid-cols-2 items-center gap-2 py-10 lg:grid-cols-3">
+                <header class="grid items-center grid-cols-2 gap-2 py-10 lg:grid-cols-3">
                     <div class="flex lg:col-start-2 lg:justify-center">
                         <svg
                             class="h-12 w-auto text-white lg:h-16 lg:text-[#FF2D20]"
@@ -52,7 +52,7 @@ function handleImageError() {
                             />
                         </svg>
                     </div>
-                    <nav v-if="canLogin" class="-mx-3 flex flex-1 justify-end">
+                    <nav v-if="canLogin" class="flex justify-end flex-1 -mx-3">
                         <Link
                             v-if="$page.props.auth.user"
                             :href="route('dashboard')"
@@ -89,7 +89,7 @@ function handleImageError() {
                         >
                             <div
                                 id="screenshot-container"
-                                class="relative flex w-full flex-1 items-stretch"
+                                class="relative flex items-stretch flex-1 w-full"
                             >
                                 <img
                                     src="https://laravel.com/assets/img/welcome/docs-light.svg"
@@ -357,7 +357,7 @@ function handleImageError() {
                     </div>
                 </main>
 
-                <footer class="py-16 text-center text-sm text-black dark:text-white/70">
+                <footer class="py-16 text-sm text-center text-black dark:text-white/70">
                     Laravel v{{ laravelVersion }} (PHP v{{ phpVersion }})
                 </footer>
             </div>
