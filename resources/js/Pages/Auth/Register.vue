@@ -135,12 +135,15 @@ const submit = () => {
                 </a>
                 
                 <div class="text-center">
+                     <p class="text-sm text-center text-gray-600">
+                    Sudah punya akun?
                     <Link
                         :href="route('login')"
-                        class="text-sm text-gray-600 underline rounded-md hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                        class="font-medium underline rounded-md text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                     >
-                        Sudah punya akun?
+                        Masuk
                     </Link>
+                </p>
                 </div>
             </div>
         </form>
