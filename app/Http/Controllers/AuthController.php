@@ -48,13 +48,13 @@ class AuthController extends Controller
 
     public function showRegister()
     {
-        return \Inertia\Inertia::render('Auth/RegisterOtp');
+        return \Inertia\Inertia::render('Auth/Register');
     }
 
     public function showVerifyOtp()
     {
         if (!session('registration_email')) {
-            return redirect('/auth/register-otp');
+            return redirect()->route('register');
         }
         return \Inertia\Inertia::render('Auth/VerifyOtp', [
             'email' => session('registration_email'),
@@ -66,6 +66,7 @@ class AuthController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8|confirmed',
         ]);
 
         // Generate OTP
@@ -83,25 +84,28 @@ class AuthController extends Controller
         // Send OTP via Email
         Mail::to($request->email)->send(new OtpMail($otpCode));
 
-        // In a real app, you would redirect to a view to enter the OTP and password
-        // and keep the email and name in session.
-        session(['registration_email' => $request->email, 'registration_name' => $request->name]);
+        // Store user data in session
+        session([
+            'registration_email' => $request->email,
+            'registration_name' => $request->name,
+            'registration_password' => Hash::make($request->password)
+        ]);
 
-        return redirect('/verify-otp')->with('success', 'OTP sent to your email.');
+        return redirect()->route('auth.verify.otp.show')->with('success', 'OTP sent to your email.');
     }
 
     public function verifyOtp(Request $request)
     {
         $request->validate([
             'otp' => 'required|string',
-            'password' => 'required|string|min:8|confirmed',
         ]);
 
         $email = session('registration_email');
         $name = session('registration_name');
+        $password = session('registration_password');
 
-        if (!$email || !$name) {
-            return redirect('/register')->with('error', 'Session expired. Please register again.');
+        if (!$email || !$name || !$password) {
+            return redirect()->route('register')->with('error', 'Session expired. Please register again.');
         }
 
         $otpRecord = Otp::where('email', $email)->first();
@@ -114,13 +118,13 @@ class AuthController extends Controller
         $user = User::create([
             'name' => $name,
             'email' => $email,
-            'password' => Hash::make($request->password),
+            'password' => $password, // Already hashed
             'email_verified_at' => now(),
         ]);
 
         // Clear OTP and session
         $otpRecord->delete();
-        session()->forget(['registration_email', 'registration_name']);
+        session()->forget(['registration_email', 'registration_name', 'registration_password']);
 
         Auth::login($user);
 

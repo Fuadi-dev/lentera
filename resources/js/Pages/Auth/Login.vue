@@ -134,7 +134,7 @@ const submit = () => {
                 <p class="text-sm text-center text-gray-600">
                     Belum punya akun?
                     <Link
-                        :href="route('auth.register.otp.show')"
+                        :href="route('register')"
                         class="font-medium underline rounded-md text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                     >
                         Daftar

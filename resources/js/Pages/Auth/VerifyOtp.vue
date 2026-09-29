@@ -15,14 +15,10 @@ const props = defineProps({
 
 const form = useForm({
     otp: '',
-    password: '',
-    password_confirmation: '',
 });
 
 const submit = () => {
-    form.post(route('auth.verify.otp'), {
-        onFinish: () => form.reset('password', 'password_confirmation'),
-    });
+    form.post(route('auth.verify.otp'));
 };
 </script>
 
@@ -59,36 +55,6 @@ const submit = () => {
                 <InputError class="mt-2" :message="form.errors.otp" />
             </div>
 
-            <div class="mt-4">
-                <InputLabel for="password" value="Buat Password Baru" />
-
-                <TextInput
-                    id="password"
-                    type="password"
-                    class="block w-full mt-1"
-                    v-model="form.password"
-                    required
-                    autocomplete="new-password"
-                />
-
-                <InputError class="mt-2" :message="form.errors.password" />
-            </div>
-
-            <div class="mt-4">
-                <InputLabel for="password_confirmation" value="Konfirmasi Password" />
-
-                <TextInput
-                    id="password_confirmation"
-                    type="password"
-                    class="block w-full mt-1"
-                    v-model="form.password_confirmation"
-                    required
-                    autocomplete="new-password"
-                />
-
-                <InputError class="mt-2" :message="form.errors.password_confirmation" />
-            </div>
-
             <div class="flex items-center justify-between mt-6">
                 <PrimaryButton
                     :class="{ 'opacity-25': form.processing }"
@@ -101,7 +67,7 @@ const submit = () => {
             
             <div class="mt-4 text-center">
                 <Link
-                    :href="route('auth.register.otp.show')"
+                    :href="route('register')"
                     class="text-sm text-gray-600 underline hover:text-gray-900"
                 >
                     Kembali atau Ganti Email
