@@ -1,0 +1,376 @@
+[
+    {
+        "id": 1,
+        "title": "Matematika",
+        "description": "Pelajari konsep dasar matematika secara bertahap dari kelas 1 sampai kelas 6.",
+        "thumbnail": "/school.jpg",
+        "classes": [
+            {
+                "id": 101,
+                "number": 1,
+                "title": "Bilangan dan Berhitung",
+                "description": "Mengenal bilangan, membandingkan nilai, dan melakukan penjumlahan sederhana.",
+                "section": [
+                    {
+                        "id": "section-101-1",
+                        "number": 1,
+                        "title": "Bilangan dan Berhitung",
+                        "description": "Mengenal bilangan, membandingkan nilai, dan melakukan penjumlahan sederhana.",
+                        "unit": [
+                            {
+                                "id": 1001,
+                                "level": 1,
+                                "order": 1,
+                                "type": "text",
+                                "title": "Mengenal Bilangan 1 sampai 20",
+                                "content": "Bilangan digunakan untuk menghitung banyak benda. Kenali urutan bilangan dari 1 sampai 20."
+                            },
+                            {
+                                "id": 1002,
+                                "level": 2,
+                                "order": 2,
+                                "type": "video",
+                                "title": "Berhitung dengan Benda di Sekitar",
+                                "url": "/videos/matematika/kelas-1-berhitung.mp4",
+                                "duration": "05:30"
+                            },
+                            {
+                                "id": 1003,
+                                "level": 3,
+                                "order": 3,
+                                "type": "quiz",
+                                "title": "Urutkan Bilangan",
+                                "passingScore": 70,
+                                "questions": [
+                                    {
+                                        "id": "q-1003-001",
+                                        "type": "multiple_choice",
+                                        "question": "Bilangan manakah yang paling kecil?",
+                                        "options": [
+                                            { "id": "a", "text": "3" },
+                                            { "id": "b", "text": "1" },
+                                            { "id": "c", "text": "4" },
+                                            { "id": "d", "text": "2" }
+                                        ],
+                                        "answer": "b",
+                                        "explanation": "Bilangan 1 adalah yang paling kecil.",
+                                        "points": 10
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "finalTest": {
+                    "title": "Tes Akhir Kelas 1",
+                    "minimumScore": 70,
+                    "questionCount": 10
+                }
+            },
+            {
+                "id": 102,
+                "number": 2,
+                "title": "Penjumlahan dan Pengurangan",
+                "description": "Menyelesaikan penjumlahan dan pengurangan bilangan sampai 100.",
+                "section": [
+                    {
+                        "id": "section-102-1",
+                        "number": 1,
+                        "title": "Penjumlahan dan Pengurangan",
+                        "description": "Menyelesaikan penjumlahan dan pengurangan bilangan sampai 100.",
+                        "unit": [
+                            {
+                                "id": 2001,
+                                "level": 1,
+                                "order": 1,
+                                "type": "text",
+                                "title": "Strategi Penjumlahan",
+                                "content": "Gunakan garis bilangan atau kelompokkan satuan dan puluhan untuk menjumlahkan bilangan."
+                            },
+                            {
+                                "id": 2002,
+                                "level": 2,
+                                "order": 2,
+                                "type": "video",
+                                "title": "Penjumlahan dan Pengurangan Bersusun",
+                                "url": "/videos/matematika/kelas-2-operasi-dasar.mp4",
+                                "duration": "07:10"
+                            },
+                            {
+                                "id": 2003,
+                                "level": 3,
+                                "order": 3,
+                                "type": "quiz",
+                                "title": "Pasangkan Soal dengan Jawaban",
+                                "passingScore": 70,
+                                "questions": [
+                                    {
+                                        "id": "q-2003-001",
+                                        "type": "short_answer",
+                                        "question": "Berapa hasil dari 7 + 5?",
+                                        "answer": ["12"],
+                                        "explanation": "7 + 5 = 12.",
+                                        "points": 10
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "finalTest": {
+                    "title": "Tes Akhir Kelas 2",
+                    "minimumScore": 70,
+                    "questionCount": 10
+                }
+            },
+            {
+                "id": 103,
+                "number": 3,
+                "title": "Perkalian dan Pembagian",
+                "description": "Memahami perkalian sebagai penjumlahan berulang dan pembagian sebagai pengelompokan.",
+                "section": [
+                    {
+                        "id": "section-103-1",
+                        "number": 1,
+                        "title": "Perkalian dan Pembagian",
+                        "description": "Memahami perkalian sebagai penjumlahan berulang dan pembagian sebagai pengelompokan.",
+                        "unit": [
+                            {
+                                "id": 3001,
+                                "level": 1,
+                                "order": 1,
+                                "type": "text",
+                                "title": "Konsep Perkalian",
+                                "content": "Perkalian dapat dipahami sebagai penjumlahan berulang dengan jumlah kelompok yang sama."
+                            },
+                            {
+                                "id": 3002,
+                                "level": 2,
+                                "order": 2,
+                                "type": "video",
+                                "title": "Belajar Tabel Perkalian",
+                                "url": "/videos/matematika/kelas-3-perkalian.mp4",
+                                "duration": "08:20"
+                            },
+                            {
+                                "id": 3003,
+                                "level": 3,
+                                "order": 3,
+                                "type": "quiz",
+                                "title": "Kelompokkan Benda",
+                                "passingScore": 70,
+                                "questions": [
+                                    {
+                                        "id": "q-3003-001",
+                                        "type": "multiple_choice",
+                                        "question": "Hasil dari 3 x 2 adalah ...",
+                                        "options": [
+                                            { "id": "a", "text": "5" },
+                                            { "id": "b", "text": "6" },
+                                            { "id": "c", "text": "8" }
+                                        ],
+                                        "answer": "b",
+                                        "explanation": "3 x 2 berarti tiga kelompok yang masing-masing berisi dua, hasilnya 6.",
+                                        "points": 10
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "finalTest": {
+                    "title": "Tes Akhir Kelas 3",
+                    "minimumScore": 70,
+                    "questionCount": 12
+                }
+            },
+            {
+                "id": 104,
+                "number": 4,
+                "title": "Pecahan dan Pengukuran",
+                "description": "Mengenal pecahan sederhana serta satuan panjang, berat, dan waktu.",
+                "section": [
+                    {
+                        "id": "section-104-1",
+                        "number": 1,
+                        "title": "Pecahan dan Pengukuran",
+                        "description": "Mengenal pecahan sederhana serta satuan panjang, berat, dan waktu.",
+                        "unit": [
+                            {
+                                "id": 4001,
+                                "level": 1,
+                                "order": 1,
+                                "type": "text",
+                                "title": "Pecahan Sederhana",
+                                "content": "Pecahan menunjukkan bagian dari keseluruhan. Pembilang menunjukkan bagian yang diambil dan penyebut menunjukkan jumlah bagian yang sama."
+                            },
+                            {
+                                "id": 4002,
+                                "level": 2,
+                                "order": 2,
+                                "type": "video",
+                                "title": "Mengukur Panjang dan Waktu",
+                                "url": "/videos/matematika/kelas-4-pengukuran.mp4",
+                                "duration": "06:45"
+                            },
+                            {
+                                "id": 4003,
+                                "level": 3,
+                                "order": 3,
+                                "type": "quiz",
+                                "title": "Cocokkan Pecahan",
+                                "passingScore": 70,
+                                "questions": [
+                                    {
+                                        "id": "q-4003-001",
+                                        "type": "true_false",
+                                        "question": "1/2 sama dengan dua dari empat bagian.",
+                                        "answer": true,
+                                        "explanation": "1/2 dan 2/4 memiliki nilai yang sama.",
+                                        "points": 10
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "finalTest": {
+                    "title": "Tes Akhir Kelas 4",
+                    "minimumScore": 70,
+                    "questionCount": 12
+                }
+            },
+            {
+                "id": 105,
+                "number": 5,
+                "title": "Bangun Datar dan Data",
+                "description": "Menghitung keliling dan luas bangun datar serta membaca data sederhana.",
+                "section": [
+                    {
+                        "id": "section-105-1",
+                        "number": 1,
+                        "title": "Bangun Datar dan Data",
+                        "description": "Menghitung keliling dan luas bangun datar serta membaca data sederhana.",
+                        "unit": [
+                            {
+                                "id": 5001,
+                                "level": 1,
+                                "order": 1,
+                                "type": "text",
+                                "title": "Keliling dan Luas",
+                                "content": "Keliling adalah panjang seluruh sisi bangun. Luas adalah ukuran permukaan yang ditutupi bangun."
+                            },
+                            {
+                                "id": 5002,
+                                "level": 2,
+                                "order": 2,
+                                "type": "video",
+                                "title": "Membaca Diagram Batang",
+                                "url": "/videos/matematika/kelas-5-data.mp4",
+                                "duration": "09:05"
+                            },
+                            {
+                                "id": 5003,
+                                "level": 3,
+                                "order": 3,
+                                "type": "quiz",
+                                "title": "Susun Data ke Diagram",
+                                "passingScore": 70,
+                                "questions": [
+                                    {
+                                        "id": "q-5003-001",
+                                        "type": "short_answer",
+                                        "question": "Berdasarkan data, berapa jumlah mangga?",
+                                        "answer": ["5"],
+                                        "explanation": "Data menunjukkan jumlah mangga adalah 5.",
+                                        "points": 10
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "finalTest": {
+                    "title": "Tes Akhir Kelas 5",
+                    "minimumScore": 70,
+                    "questionCount": 15
+                }
+            },
+            {
+                "id": 106,
+                "number": 6,
+                "title": "Operasi Campuran dan Pemecahan Masalah",
+                "description": "Menggunakan operasi hitung campuran untuk menyelesaikan masalah sehari-hari.",
+                "section": [
+                    {
+                        "id": "section-106-1",
+                        "number": 1,
+                        "title": "Operasi Campuran dan Pemecahan Masalah",
+                        "description": "Menggunakan operasi hitung campuran untuk menyelesaikan masalah sehari-hari.",
+                        "unit": [
+                            {
+                                "id": 6001,
+                                "level": 1,
+                                "order": 1,
+                                "type": "text",
+                                "title": "Urutan Operasi Hitung",
+                                "content": "Kerjakan operasi dalam tanda kurung terlebih dahulu, lalu perkalian atau pembagian, kemudian penjumlahan atau pengurangan."
+                            },
+                            {
+                                "id": 6002,
+                                "level": 2,
+                                "order": 2,
+                                "type": "video",
+                                "title": "Strategi Menyelesaikan Soal Cerita",
+                                "url": "/videos/matematika/kelas-6-soal-cerita.mp4",
+                                "duration": "10:15"
+                            },
+                            {
+                                "id": 6003,
+                                "level": 3,
+                                "order": 3,
+                                "type": "quiz",
+                                "title": "Susun Langkah Penyelesaian",
+                                "passingScore": 70,
+                                "questions": [
+                                    {
+                                        "id": "q-6003-001",
+                                        "type": "multiple_choice",
+                                        "question": "Apa langkah pertama menyelesaikan soal cerita?",
+                                        "options": [
+                                            { "id": "a", "text": "Pahami pertanyaan" },
+                                            { "id": "b", "text": "Langsung menghitung" },
+                                            { "id": "c", "text": "Periksa jawaban" }
+                                        ],
+                                        "answer": "a",
+                                        "explanation": "Kita harus memahami pertanyaan sebelum memilih operasi.",
+                                        "points": 10
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "finalTest": {
+                    "title": "Tes Akhir Kelas 6",
+                    "minimumScore": 70,
+                    "questionCount": 15
+                }
+            }
+        ]
+    },
+    {
+        "id": 2,
+        "title": "Bahasa Indonesia",
+        "description": "Pelajari tata bahasa dan keterampilan menulis.",
+        "thumbnail": "/teacher.jpg",
+        "classes": []
+    },
+    {
+        "id": 3,
+        "title": "Bahasa Inggris",
+        "description": "Pelajari tata bahasa dan keterampilan berbicara.",
+        "thumbnail": "/login.jpg",
+        "classes": []
+    }
+]
