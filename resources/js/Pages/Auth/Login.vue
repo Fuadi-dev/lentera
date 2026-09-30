@@ -99,10 +99,10 @@ const submit = () => {
                 >
                     Masuk
                 </PrimaryButton>
-                
+
                 <div class="relative flex items-center justify-center w-full my-4">
                     <div class="absolute w-full border-t border-gray-300"></div>
-                    <span class="relative px-2 text-sm text-gray-500 bg-white">Atau</span>
+                    <span class="relative px-2 text-sm text-gray-500 bg-secondary">Atau</span>
                 </div>
 
                 <a

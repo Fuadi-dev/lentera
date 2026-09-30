@@ -123,7 +123,7 @@ const filteredCourses = computed(() => {
                         v-else
                         class="px-6 py-12 text-center border border-dashed rounded-lg border-border bg-card"
                     >
-                        <MagnifyingGlass
+                        <PhMagnifyingGlass
                             class="mx-auto text-muted-foreground"
                             :size="28"
                             aria-hidden="true"
