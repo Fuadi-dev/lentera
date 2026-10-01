@@ -37,9 +37,10 @@ defineProps({
                     <UpdatePasswordForm class="max-w-xl" />
                 </div>
 
-                <div class="p-4 bg-white shadow sm:rounded-lg sm:p-8">
-                    <DeleteUserForm class="max-w-xl" />
-                </div>
+                <!-- <div class="p-4 bg-white shadow sm:rounded-lg sm:p-8"> -->
+                <!-- not yet implemented -->
+                <!-- <DeleteUserForm class="max-w-xl" /> -->
+                <!-- </div> -->
             </div>
         </div>
     </AuthenticatedLayout>

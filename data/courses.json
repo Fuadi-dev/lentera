@@ -2,8 +2,8 @@
     {
         "id": 1,
         "title": "Matematika",
-        "description": "Pelajari konsep dasar matematika secara bertahap dari kelas 1 sampai kelas 6.",
-        "thumbnail": "/school.jpg",
+        "description": "Petualangan seru menaklukkan angka dan logika dari Kelas 1 sampai 6. Ubah hitungan sulit jadi asyik!",
+        "thumbnail": "/mtk.jpg",
         "classes": [
             {
                 "id": 101,
@@ -362,15 +362,15 @@
     {
         "id": 2,
         "title": "Bahasa Indonesia",
-        "description": "Pelajari tata bahasa dan keterampilan menulis.",
-        "thumbnail": "/teacher.jpg",
+        "description": "Jelajahi kata dan cerita seru. Asah kemampuan membaca, menulis, dan jadilah pencerita hebat!.",
+        "thumbnail": "/bindo.jpg",
         "classes": []
     },
     {
         "id": 3,
         "title": "Bahasa Inggris",
-        "description": "Pelajari tata bahasa dan keterampilan berbicara.",
-        "thumbnail": "/login.jpg",
+        "description": "Buka jendela dunia bersama Si Lentera! Pelajari vocab, cerita menarik, dan percakapan dasar dengan mudah.",
+        "thumbnail": "/bing.jpg",
         "classes": []
     }
 ]
