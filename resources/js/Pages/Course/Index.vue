@@ -29,15 +29,40 @@ const props = defineProps({
         </template>
 
         <div class="px-4 pt-6 pb-12 sm:px-6 lg:px-8">
-            <div class="mx-auto space-y-8 max-w-7xl">
-                <section class="p-6 border border-orange-200 rounded-xl bg-orange-50 sm:p-8">
-                    <p class="text-sm font-semibold tracking-wide uppercase text-primary">Course</p>
-                    <h1 class="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-                        {{ course.title }}
-                    </h1>
-                    <p class="max-w-3xl mt-2 text-sm text-muted-foreground sm:text-base">
-                        {{ course.description }}
-                    </p>
+            <div class="mx-auto space-y-8 max-w-[76rem]">
+                <section
+                    class="relative flex items-center justify-between overflow-hidden border-2 bg-gray-50 sm:rounded-lg"
+                >
+                    <span
+                        class="absolute text-3xl select-none right-32 top-5 md:right-56 twinkle"
+                        aria-hidden="true"
+                        >⭐</span
+                    >
+                    <span
+                        class="absolute text-2xl select-none right-24 bottom-6 md:right-44 twinkle"
+                        style="animation-delay: 0.8s"
+                        aria-hidden="true"
+                        >✨</span
+                    >
+
+                    <div class="p-6 md:p-10">
+                        <p class="text-sm font-semibold tracking-wide uppercase text-primary">
+                            Course
+                        </p>
+                        <h1
+                            class="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl"
+                        >
+                            {{ course.title }}
+                        </h1>
+                        <p class="max-w-3xl mt-2 text-sm text-muted-foreground sm:text-base">
+                            {{ course.description }}
+                        </p>
+                    </div>
+                    <img
+                        src="/maskot.png"
+                        alt="Maskot Lentera"
+                        class="w-24 h-full py-4 mr-6 md:w-36 md:mr-12"
+                    />
                 </section>
 
                 <section class="space-y-4" aria-labelledby="class-selection-heading">
@@ -67,6 +92,7 @@ const props = defineProps({
                             class="p-5 text-left transition-colors border rounded-xl border-border bg-card hover:border-primary"
                         >
                             <span class="flex items-center justify-between gap-3">
+                                <p class="font-bold text-md">Kelas</p>
                                 <span
                                     class="inline-flex items-center justify-center w-10 h-10 text-sm font-bold rounded-full bg-primary text-primary-foreground"
                                 >

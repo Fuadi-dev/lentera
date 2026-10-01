@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { PhArrowLeft, PhBookOpen, PhQuestion, PhVideoCamera } from '@phosphor-icons/vue';
@@ -18,6 +18,13 @@ const props = defineProps({
     },
 });
 
+const NODE_WIDTH = 240;
+const NODE_MIN_HEIGHT = 112;
+const MIN_GAP_X = 48;
+const STEP_Y = 140;
+const ROW_GAP = 56;
+const PADDING_Y = 24;
+
 const selectedClass = computed(() =>
     props.course.classes?.find((courseClass) => courseClass.number === Number(props.classNumber))
 );
@@ -32,50 +39,100 @@ const learningPath = computed(
         ) ?? []
 );
 
-const flowHeight = computed(() => {
-    const groupCount = Math.ceil(learningPath.value.length / 3);
-    const groupGap = Math.max(0, groupCount - 1) * 56;
+const flowContainer = ref(null);
+const containerWidth = ref(0);
+let resizeObserver = null;
 
-    return `${Math.max(544, learningPath.value.length * 140 + groupGap + 120)}px`;
+watch(
+    flowContainer,
+    (element) => {
+        resizeObserver?.disconnect();
+
+        if (!element) {
+            return;
+        }
+
+        containerWidth.value = element.clientWidth;
+        resizeObserver = new ResizeObserver(([entry]) => {
+            containerWidth.value = entry.contentRect.width;
+        });
+        resizeObserver.observe(element);
+    },
+    { flush: 'post' }
+);
+
+onBeforeUnmount(() => resizeObserver?.disconnect());
+
+const columns = computed(() => {
+    const maxColumns = Math.max(
+        1,
+        Math.floor((containerWidth.value + MIN_GAP_X) / (NODE_WIDTH + MIN_GAP_X))
+    );
+
+    return Math.min(maxColumns, Math.max(1, learningPath.value.length));
+});
+
+const gapX = computed(() => {
+    if (columns.value < 2) {
+        return 0;
+    }
+
+    return (containerWidth.value - columns.value * NODE_WIDTH) / (columns.value - 1);
+});
+
+const offsetX = computed(() =>
+    columns.value < 2 ? Math.max(0, (containerWidth.value - NODE_WIDTH) / 2) : 0
+);
+
+const flowHeight = computed(() => {
+    const total = learningPath.value.length;
+
+    if (!total) {
+        return '0px';
+    }
+
+    const rows = Math.ceil(total / columns.value);
+    const lastY = (total - 1) * STEP_Y + (rows - 1) * ROW_GAP;
+
+    return `${lastY + NODE_MIN_HEIGHT + PADDING_Y * 2}px`;
 });
 
 function flowPosition(index) {
-    const positionInGroup = index % 3;
-    const group = Math.floor(index / 3);
-    const isMovingRight = group % 2 === 0;
+    const cols = columns.value;
+    const row = Math.floor(index / cols);
+    const col = index % cols;
+    const isMovingRight = row % 2 === 0;
+    const stepX = NODE_WIDTH + gapX.value;
 
     return {
-        x: (isMovingRight ? positionInGroup : 2 - positionInGroup) * 280,
-        y: index * 140 + group * 56,
+        x: offsetX.value + (isMovingRight ? col : cols - 1 - col) * stepX,
+        y: index * STEP_Y + row * ROW_GAP,
     };
 }
 
 const flowNodes = computed(() =>
-    learningPath.value.map((material, index) => {
-        return {
-            id: `material-${material.id ?? index}`,
-            type: 'learningMaterial',
-            position: flowPosition(index),
-            data: { material, index },
-        };
-    })
+    learningPath.value.map((material, index) => ({
+        id: `material-${material.id ?? index}`,
+        type: 'learningMaterial',
+        position: flowPosition(index),
+        data: { material, index },
+    }))
 );
 
 const flowEdges = computed(() =>
     learningPath.value.slice(0, -1).map((material, index) => {
-        const currentPosition = flowPosition(index);
-        const nextPosition = flowPosition(index + 1);
+        const cols = columns.value;
         const source = `material-${material.id ?? index}`;
         const target = `material-${learningPath.value[index + 1].id ?? index + 1}`;
-        const isMovingRight = nextPosition.x > currentPosition.x;
-        const isMovingLeft = nextPosition.x < currentPosition.x;
-        const isThirdNode = (index + 1) % 3 === 0;
-        const sourceHandle = isThirdNode
+        const goesDown = (index + 1) % cols === 0;
+        const isMovingRight = Math.floor(index / cols) % 2 === 0;
+
+        const sourceHandle = goesDown
             ? 'source-bottom'
             : isMovingRight
               ? 'source-right'
               : 'source-left';
-        const targetHandle = isThirdNode
+        const targetHandle = goesDown
             ? 'target-top'
             : isMovingRight
               ? 'target-left'
@@ -88,12 +145,12 @@ const flowEdges = computed(() =>
             type: 'default',
             sourceHandle,
             targetHandle,
-            sourcePosition: isThirdNode
+            sourcePosition: goesDown
                 ? Position.Bottom
                 : isMovingRight
                   ? Position.Right
                   : Position.Left,
-            targetPosition: isThirdNode
+            targetPosition: goesDown
                 ? Position.Top
                 : isMovingRight
                   ? Position.Left
@@ -132,31 +189,56 @@ function materialIcon(type) {
                 <div>
                     <p class="text-sm text-muted-foreground">{{ course.title }}</p>
                     <h2 class="text-2xl font-bold text-foreground">
-                        Learning path kelas {{ classNumber }}
+                        Jalur Belajar kelas {{ classNumber }}
                     </h2>
                 </div>
             </div>
         </template>
 
         <div class="px-4 pt-6 pb-12 sm:px-6 lg:px-8">
-            <div class="max-w-4xl mx-auto">
-                <section class="p-6 border border-orange-200 rounded-xl bg-orange-50 sm:p-8">
-                    <p class="text-sm font-semibold tracking-wide uppercase text-primary">
-                        {{ selectedClass?.title }}
-                    </p>
-                    <h1 class="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-                        Ikuti langkah belajarmu
-                    </h1>
-                    <p class="max-w-2xl mt-2 text-sm leading-6 text-muted-foreground sm:text-base">
-                        Selesaikan materi sesuai urutan.
-                    </p>
+            <div class="max-w-[76rem] mx-auto">
+                <section
+                    class="relative flex items-center justify-between overflow-hidden border-2 bg-gray-50 sm:rounded-lg"
+                >
+                    <span
+                        class="absolute text-3xl select-none right-32 top-5 md:right-56 twinkle"
+                        aria-hidden="true"
+                        >⭐</span
+                    >
+                    <span
+                        class="absolute text-2xl select-none right-24 bottom-6 md:right-44 twinkle"
+                        style="animation-delay: 0.8s"
+                        aria-hidden="true"
+                        >✨</span
+                    >
+
+                    <div class="p-6 md:p-10">
+                        <p class="text-sm font-semibold tracking-wide uppercase text-primary">
+                            {{ selectedClass?.title }}
+                        </p>
+                        <h1
+                            class="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl"
+                        >
+                            Ikuti langkah belajarmu
+                        </h1>
+                        <p
+                            class="max-w-2xl mt-2 text-sm leading-6 text-muted-foreground sm:text-base"
+                        >
+                            Selesaikan materi sesuai urutan.
+                        </p>
+                    </div>
+                    <img
+                        src="/maskot.png"
+                        alt="Maskot Lentera"
+                        class="w-24 h-full py-4 mr-6 md:w-36 md:mr-12"
+                    />
                 </section>
 
                 <section class="mt-8" aria-labelledby="path-heading">
                     <div class="flex items-center justify-between gap-3">
                         <div>
                             <p class="text-sm font-semibold tracking-wide uppercase text-primary">
-                                Learning path
+                                Jalur Belajar
                             </p>
                             <h3 id="path-heading" class="mt-1 text-xl font-bold text-foreground">
                                 Kelas {{ classNumber }}
@@ -169,13 +251,15 @@ function materialIcon(type) {
 
                     <div
                         v-if="learningPath.length"
+                        ref="flowContainer"
                         class="relative mt-8 learning-flow"
                         :style="{ height: flowHeight }"
                     >
                         <VueFlow
+                            v-if="containerWidth > 0"
                             :nodes="flowNodes"
                             :edges="flowEdges"
-                            :default-viewport="{ x: 24, y: 24, zoom: 1 }"
+                            :default-viewport="{ x: 0, y: PADDING_Y, zoom: 1 }"
                             :zoom-on-scroll="false"
                             :zoom-on-pinch="false"
                             :zoom-on-double-click="false"
@@ -266,11 +350,11 @@ function materialIcon(type) {
 }
 
 .learning-flow__canvas {
-    min-width: 52rem;
+    width: 100%;
 }
 
 .learning-node {
-    width: 13rem;
+    width: 15rem;
     min-height: 7rem;
     padding: 1.25rem;
     border: 2px solid theme('colors.stone.800');
@@ -280,6 +364,28 @@ function materialIcon(type) {
 }
 
 .learning-handle {
+    width: 0;
+    height: 0;
+    min-width: 0;
+    min-height: 0;
+    border: 0;
     opacity: 0;
+    pointer-events: none;
+}
+
+.learning-handle.vue-flow__handle-left {
+    left: 0;
+}
+
+.learning-handle.vue-flow__handle-right {
+    right: 0;
+}
+
+.learning-handle.vue-flow__handle-top {
+    top: 0;
+}
+
+.learning-handle.vue-flow__handle-bottom {
+    bottom: 0;
 }
 </style>
