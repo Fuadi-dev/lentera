@@ -57,6 +57,22 @@
                                         "points": 10
                                     }
                                 ]
+                            },
+                            {
+                                "id": 1004,
+                                "level": 4,
+                                "order": 4,
+                                "type": "text",
+                                "title": "Mengenal Bilangan 1 sampai 20",
+                                "content": "Bilangan digunakan untuk menghitung banyak benda. Kenali urutan bilangan dari 1 sampai 20."
+                            },
+                            {
+                                "id": 1005,
+                                "level": 5,
+                                "order": 5,
+                                "type": "text",
+                                "title": "Mengenal Bilangan 1 sampai 20",
+                                "content": "Bilangan digunakan untuk menghitung banyak benda. Kenali urutan bilangan dari 1 sampai 20."
                             }
                         ]
                     }
