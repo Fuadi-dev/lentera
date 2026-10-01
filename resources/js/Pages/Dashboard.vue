@@ -28,17 +28,16 @@ const filteredCourses = computed(() => {
     );
 });
 </script>
-
 <template>
     <Head title="Beranda" />
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-2xl font-bold text-foreground">Dashboard</h2>
+            <h2 class="text-2xl font-bold text-foreground">Beranda</h2>
         </template>
 
         <div class="px-4 pt-6 pb-12 sm:px-6 lg:px-8">
-            <div class="mx-auto space-y-8 max-w-7xl">
+            <div class="max-w-[76rem] mx-auto space-y-8">
                 <div
                     class="relative flex items-center justify-between overflow-hidden border-2 bg-gray-50 sm:rounded-lg"
                 >
@@ -97,7 +96,7 @@ const filteredCourses = computed(() => {
                                 <img
                                     :src="material.thumbnail || '/school.jpg'"
                                     :alt="`Thumbnail ${material.title}`"
-                                    class="object-cover w-full h-full transition-transform duration-300 hover:scale-105"
+                                    class="object-cover w-full h-full"
                                 />
                             </div>
                             <div class="flex flex-col flex-1 p-5">
@@ -111,7 +110,7 @@ const filteredCourses = computed(() => {
                             <div class="flex items-center p-5 pt-0">
                                 <Button :as-child="true">
                                     <Link :href="`/dashboard/courses/${material.id}`">
-                                        Lihat Materi
+                                        Pelajari
                                     </Link>
                                     <PhArrowRight class="w-4 h-4 ml-1 -mr-1" aria-hidden="true" />
                                 </Button>
