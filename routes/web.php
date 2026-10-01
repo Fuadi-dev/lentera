@@ -18,6 +18,51 @@ Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+Route::get('/dashboard/courses/{course}', function (string $course) {
+    $courses = json_decode(
+        file_get_contents(base_path('data/courses.json')),
+        true,
+        512,
+        JSON_THROW_ON_ERROR
+    );
+
+    $selectedCourse = collect($courses)->first(
+        fn(array $item): bool => (string) $item['id'] === $course
+    );
+
+    abort_if($selectedCourse === null, 404);
+
+    return Inertia::render('Course/Index', [
+        'course' => $selectedCourse,
+    ]);
+})->middleware(['auth', 'verified'])->name('courses.show');
+
+Route::get('/dashboard/courses/{course}/classes/{class}', function (string $course, int $class) {
+    $courses = json_decode(
+        file_get_contents(base_path('data/courses.json')),
+        true,
+        512,
+        JSON_THROW_ON_ERROR
+    );
+
+    $selectedCourse = collect($courses)->first(
+        fn (array $item): bool => (string) $item['id'] === $course
+    );
+
+    abort_if($selectedCourse === null, 404);
+    abort_if(
+        collect($selectedCourse['classes'] ?? [])->doesntContain(
+            fn (array $item): bool => (int) $item['number'] === $class
+        ),
+        404
+    );
+
+    return Inertia::render('Course/LearningPath', [
+        'course' => $selectedCourse,
+        'classNumber' => $class,
+    ]);
+})->middleware(['auth', 'verified'])->name('courses.learning-path');
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -32,4 +77,4 @@ Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallbac
 Route::get('/auth/verify-otp', [AuthController::class, 'showVerifyOtp'])->name('auth.verify.otp.show');
 Route::post('/auth/verify-otp', [AuthController::class, 'verifyOtp'])->name('auth.verify.otp');
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
