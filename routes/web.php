@@ -73,6 +73,8 @@ use App\Http\Controllers\AuthController;
 
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
+Route::get('/auth/google/role', [AuthController::class, 'showGoogleRoleSelection'])->name('auth.google.role.show');
+Route::post('/auth/google/role', [AuthController::class, 'completeGoogleRegistration'])->name('auth.google.role.complete');
 
 Route::get('/auth/verify-otp', [AuthController::class, 'showVerifyOtp'])->name('auth.verify.otp.show');
 Route::post('/auth/verify-otp', [AuthController::class, 'verifyOtp'])->name('auth.verify.otp');

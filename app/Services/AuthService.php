@@ -12,21 +12,42 @@ use Laravel\Socialite\Facades\Socialite;
 class AuthService
 {
     /**
-     * Handle the Google callback and create/update the user.
+     * Check if user exists from Google Login. If yes, update and return. If not, return false.
      */
-    public function handleGoogleLogin()
+    public function handleExistingGoogleUser($googleUser)
     {
-        $googleUser = Socialite::driver('google')->user();
-        
-        $user = User::updateOrCreate([
-            'email' => $googleUser->email,
-        ], [
-            'name' => $googleUser->name,
-            'google_id' => $googleUser->id,
-            'google_token' => $googleUser->token,
-            'google_refresh_token' => $googleUser->refreshToken,
+        $user = User::where('email', $googleUser->email)->first();
+
+        if ($user) {
+            $user->update([
+                'name' => $googleUser->name, // Update name just in case
+                'google_id' => $googleUser->id,
+                'google_token' => $googleUser->token,
+                'google_refresh_token' => $googleUser->refreshToken,
+            ]);
+            return $user;
+        }
+
+        return false;
+    }
+
+    /**
+     * Create a new user from Google data after role selection.
+     */
+    public function createGoogleUser(array $googleData, string $role)
+    {
+        $user = User::create([
+            'name' => $googleData['name'],
+            'email' => $googleData['email'],
+            'google_id' => $googleData['id'],
+            'google_token' => $googleData['token'],
+            'google_refresh_token' => $googleData['refresh_token'],
+            'role' => $role,
             'email_verified_at' => now(),
+            'password' => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(24)),
         ]);
+
+        \App\Jobs\SendWelcomeEmailJob::dispatch($user);
 
         return $user;
     }
