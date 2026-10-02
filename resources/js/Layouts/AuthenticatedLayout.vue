@@ -5,6 +5,7 @@ import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/Components/ui/tooltip';
 import { Link } from '@inertiajs/vue3';
 
 const showingNavigationDropdown = ref(false);
@@ -36,6 +37,24 @@ const showingNavigationDropdown = ref(false);
                         </div>
 
                         <div class="hidden sm:ms-6 sm:flex sm:items-center">
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger as-child>
+                                        <div class="flex items-center">
+                                            <img
+                                                src="/images/ui/streak.png"
+                                                alt="Streak"
+                                                class="object-contain w-11 h-11"
+                                            />
+                                            <span class="text-base font-semibold text-orange-500"
+                                                >3</span
+                                            >
+                                        </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Streak 3 hari</TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+
                             <div class="relative ms-3">
                                 <Dropdown align="right" width="48">
                                     <template #trigger>
