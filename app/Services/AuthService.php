@@ -46,7 +46,7 @@ class AuthService
             ]
         );
 
-        Mail::to($data['email'])->send(new OtpMail($otpCode));
+        Mail::to($data['email'])->queue(new OtpMail($otpCode));
 
         session([
             'registration_email' => $data['email'],
@@ -59,24 +59,35 @@ class AuthService
     /**
      * Verify OTP and create the user if valid.
      */
-    public function verifyOtpAndCreateUser(string $otpInput, array $sessionData)
+    public function verifyOtpAndCreateUser(string $otpInput)
     {
-        $otpRecord = Otp::where('email', $sessionData['email'])->first();
+        $email = session('registration_email');
+        $name = session('registration_name');
+        $password = session('registration_password');
+        $role = session('registration_role');
+
+        if (!$email || !$name || !$password || !$role) {
+            throw new \InvalidArgumentException('Session expired. Please register again.');
+        }
+
+        $otpRecord = Otp::where('email', $email)->first();
 
         if (!$otpRecord || $otpRecord->otp !== $otpInput || $otpRecord->expires_at < now()) {
-            return false;
+            throw new \Exception('Invalid or expired OTP.');
         }
 
         $user = User::create([
-            'name' => $sessionData['name'],
-            'email' => $sessionData['email'],
-            'password' => $sessionData['password'],
-            'role' => $sessionData['role'],
+            'name' => $name,
+            'email' => $email,
+            'password' => $password,
+            'role' => $role,
             'email_verified_at' => now(),
         ]);
 
         $otpRecord->delete();
         session()->forget(['registration_email', 'registration_name', 'registration_password', 'registration_role']);
+
+        \App\Jobs\SendWelcomeEmailJob::dispatch($user);
 
         return $user;
     }
