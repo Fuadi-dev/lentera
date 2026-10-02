@@ -228,7 +228,7 @@ function materialIcon(type) {
                         </p>
                     </div>
                     <img
-                        src="/maskot.png"
+                        src="/images/brand/maskot.png"
                         alt="Maskot Lentera"
                         class="w-24 h-full py-4 mr-6 md:w-36 md:mr-12"
                     />
