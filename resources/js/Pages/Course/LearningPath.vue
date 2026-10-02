@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { PhArrowLeft, PhBookOpen, PhQuestion, PhVideoCamera } from '@phosphor-icons/vue';
+import { PhArrowLeft, PhBookOpen, PhLock, PhQuestion, PhVideoCamera } from '@phosphor-icons/vue';
 import '@vue-flow/core/dist/style.css';
 import '@vue-flow/core/dist/theme-default.css';
 import { Handle, Position, VueFlow } from '@vue-flow/core';
