@@ -108,7 +108,7 @@ const submit = () => {
                                 : 'text-gray-500 hover:text-gray-700'
                         ]"
                     >
-                        Anak / Siswa
+                        Anak
                     </button>
                     <button
                         type="button"
