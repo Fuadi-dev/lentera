@@ -46,13 +46,13 @@ Route::get('/dashboard/courses/{course}/classes/{class}', function (string $cour
     );
 
     $selectedCourse = collect($courses)->first(
-        fn (array $item): bool => (string) $item['id'] === $course
+        fn(array $item): bool => (string) $item['id'] === $course
     );
 
     abort_if($selectedCourse === null, 404);
     abort_if(
         collect($selectedCourse['classes'] ?? [])->doesntContain(
-            fn (array $item): bool => (int) $item['number'] === $class
+            fn(array $item): bool => (int) $item['number'] === $class
         ),
         404
     );
@@ -62,6 +62,43 @@ Route::get('/dashboard/courses/{course}/classes/{class}', function (string $cour
         'classNumber' => $class,
     ]);
 })->middleware(['auth', 'verified'])->name('courses.learning-path');
+
+Route::get('/dashboard/courses/{course}/classes/{class}/materials/{material}', function (
+    string $course,
+    int $class,
+    int $material
+) {
+    $courses = json_decode(
+        file_get_contents(base_path('data/courses.json')),
+        true,
+        512,
+        JSON_THROW_ON_ERROR
+    );
+
+    $selectedCourse = collect($courses)->first(
+        fn(array $item): bool => (string) $item['id'] === $course
+    );
+
+    abort_if($selectedCourse === null, 404);
+
+    $selectedClass = collect($selectedCourse['classes'] ?? [])->first(
+        fn(array $item): bool => (int) $item['number'] === $class
+    );
+
+    abort_if($selectedClass === null, 404);
+
+    $selectedMaterial = collect($selectedClass['section'] ?? [])
+        ->flatMap(fn(array $section) => $section['unit'] ?? [])
+        ->first(fn(array $item): bool => (int) $item['id'] === $material);
+
+    abort_if($selectedMaterial === null, 404);
+
+    return Inertia::render('Course/Material', [
+        'course' => $selectedCourse,
+        'classNumber' => $class,
+        'material' => $selectedMaterial,
+    ]);
+})->middleware(['auth', 'verified'])->name('courses.material');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
