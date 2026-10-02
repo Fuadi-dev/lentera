@@ -1,3 +1,3 @@
 <template>
-    <img src="/logo-lentera.png" class="w-full" />
+    <img src="/images/brand/logo-lentera.png" class="w-full" />
 </template>

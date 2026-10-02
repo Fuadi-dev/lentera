@@ -62,7 +62,7 @@ const filteredCourses = computed(() => {
                             pintar. Kamu pasti bisa!
                         </p>
                     </div>
-                    <img src="/maskot.png" class="w-24 h-full py-4 mr-6 md:w-36 md:mr-12" />
+                    <img src="/images/brand/maskot.png" class="w-24 h-full py-4 mr-6 md:w-36 md:mr-12" />
                 </div>
 
                 <section class="space-y-4" aria-labelledby="courses-heading">
@@ -94,7 +94,7 @@ const filteredCourses = computed(() => {
                         >
                             <div class="relative aspect-[16/9] overflow-hidden bg-muted">
                                 <img
-                                    :src="material.thumbnail || '/school.jpg'"
+                                    :src="material.thumbnail || '/images/ui/school.jpg'"
                                     :alt="`Thumbnail ${material.title}`"
                                     class="object-cover w-full h-full"
                                 />
