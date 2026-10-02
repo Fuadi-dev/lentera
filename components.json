@@ -2,7 +2,7 @@
   "$schema": "https://shadcn-vue.com/schema.json",
   "style": "reka-vega",
   "font": "manrope",
-  "typescript": false,
+  "typescript": true,
   "tailwind": {
     "config": "tailwind.config.js",
     "css": "resources/css/app.css",
