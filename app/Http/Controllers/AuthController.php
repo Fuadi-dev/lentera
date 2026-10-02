@@ -33,13 +33,64 @@ class AuthController extends Controller
     public function handleGoogleCallback()
     {
         try {
-            $user = $this->authService->handleGoogleLogin();
-            Auth::login($user);
-            return redirect('/dashboard');
+            $googleUser = Socialite::driver('google')->user();
+            
+            $existingUser = $this->authService->handleExistingGoogleUser($googleUser);
+            
+            if ($existingUser) {
+                Auth::login($existingUser);
+                return redirect('/dashboard');
+            }
+
+            // New user, store data in session and redirect to role selection
+            session([
+                'pending_google_user' => [
+                    'name' => $googleUser->name,
+                    'email' => $googleUser->email,
+                    'id' => $googleUser->id,
+                    'token' => $googleUser->token,
+                    'refresh_token' => $googleUser->refreshToken,
+                ]
+            ]);
+
+            return redirect()->route('auth.google.role.show');
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Google Login Error: ' . $e->getMessage());
             return redirect('/login')->with('error', 'Google login failed: ' . $e->getMessage());
         }
+    }
+
+    public function showGoogleRoleSelection()
+    {
+        if (!session('pending_google_user')) {
+            return redirect()->route('login');
+        }
+
+        return \Inertia\Inertia::render('Auth/CompleteGoogle', [
+            'name' => session('pending_google_user')['name'],
+            'email' => session('pending_google_user')['email'],
+        ]);
+    }
+
+    public function completeGoogleRegistration(\Illuminate\Http\Request $request)
+    {
+        $request->validate([
+            'role' => 'required|in:parent,child',
+        ]);
+
+        $googleData = session('pending_google_user');
+
+        if (!$googleData) {
+            return redirect()->route('login')->with('error', 'Session expired. Please try Google login again.');
+        }
+
+        $user = $this->authService->createGoogleUser($googleData, $request->role);
+
+        session()->forget('pending_google_user');
+
+        Auth::login($user);
+
+        return redirect('/dashboard')->with('success', 'Registration successful!');
     }
 
 
