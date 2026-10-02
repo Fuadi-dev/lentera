@@ -3,7 +3,7 @@ import type { HTMLAttributes } from 'vue'
 
 import { PhSidebarSimple } from '@phosphor-icons/vue'
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/Components/ui/button'
 import { useSidebar } from './utils'
 
 const props = defineProps<{
