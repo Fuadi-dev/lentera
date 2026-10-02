@@ -99,7 +99,7 @@ const submit = () => {
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
                 >
-                    Register
+                    Daftar
                 </PrimaryButton>
 
                 <div class="relative flex items-center justify-center w-full my-4">
@@ -132,17 +132,17 @@ const submit = () => {
                     </svg>
                     Daftar dengan Google
                 </a>
-                
+
                 <div class="text-center">
-                     <p class="text-sm text-center text-gray-600">
-                    Sudah punya akun?
-                    <Link
-                        :href="route('login')"
-                        class="font-medium underline rounded-md text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                    >
-                        Masuk
-                    </Link>
-                </p>
+                    <p class="text-sm text-center text-gray-600">
+                        Sudah punya akun?
+                        <Link
+                            :href="route('login')"
+                            class="font-medium underline rounded-md text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                        >
+                            Masuk
+                        </Link>
+                    </p>
                 </div>
             </div>
         </form>
