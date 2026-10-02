@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { PhArrowLeft, PhBookOpen, PhQuestion, PhVideoCamera } from '@phosphor-icons/vue';
 import '@vue-flow/core/dist/style.css';
 import '@vue-flow/core/dist/theme-default.css';
@@ -171,6 +171,20 @@ function materialIcon(type) {
 
     return PhBookOpen;
 }
+
+function openMaterial({ event, node }) {
+    if (event.target instanceof Element && event.target.closest('a')) {
+        return;
+    }
+
+    router.visit(
+        route('courses.material', {
+            course: props.course.id,
+            class: props.classNumber,
+            material: node.data.material.id,
+        })
+    );
+}
 </script>
 
 <template>
@@ -268,10 +282,21 @@ function materialIcon(type) {
                             :nodes-draggable="false"
                             :nodes-connectable="false"
                             :elements-selectable="false"
+                            @node-click="openMaterial"
                             class="learning-flow__canvas"
                         >
                             <template #node-learningMaterial="{ data }">
-                                <article class="learning-node">
+                                <Link
+                                    :href="
+                                        route('courses.material', {
+                                            course: course.id,
+                                            class: classNumber,
+                                            material: data.material.id,
+                                        })
+                                    "
+                                    class="block transition-transform cursor-pointer learning-node hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                                    :aria-label="`Buka materi ${data.material.title}`"
+                                >
                                     <Handle
                                         type="target"
                                         :position="Position.Left"
@@ -324,7 +349,7 @@ function materialIcon(type) {
                                     >
                                         {{ data.material.title }}
                                     </h4>
-                                </article>
+                                </Link>
                             </template>
                         </VueFlow>
                     </div>
@@ -361,6 +386,7 @@ function materialIcon(type) {
     border-radius: 1rem;
     background: white;
     box-shadow: 0 4px 0 theme('colors.stone.800');
+    pointer-events: auto;
 }
 
 .learning-handle {
