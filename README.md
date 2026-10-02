@@ -84,4 +84,19 @@ Perintah ini akan melakukan kompilasi aset Vue & Tailwind secara realtime setiap
 - `routes/web.php` : Tempat mendefinisikan URL/Routing aplikasi.
 - `app/Http/Controllers/` : Tempat menyimpan logika backend (Controller).
 
+---
+
+## 🏗️ Arsitektur Aplikasi (Backend)
+Proyek ini mengadopsi pola desain **"Fat Service, Skinny Controller"** pada modul Authentication dan modul utama lainnya.
+
+- **Controllers (`app/Http/Controllers`)**: Sangat tipis (*skinny*), hanya menangani *Request*, validasi awal, dan *Response/Redirect*.
+- **Form Requests (`app/Http/Requests`)**: Memisahkan logika aturan validasi (seperti `required`, `email`, dll) dari Controller agar rapi.
+- **Services (`app/Services`)**: Menampung *business logic* yang tebal (*fat*), operasi database (Insert/Update), dan pengiriman email. 
+- **Jobs & Queues (`app/Jobs`)**: Tugas berat (seperti mengirim *Welcome Email* dan pengiriman OTP) dilakukan di belakang layar secara *asynchronous* melalui sistem *Queue* Laravel. Hal ini menjamin pengalaman pengguna (UX) web tetap *real-time* dan memuat seketika tanpa perlu menunggu server SMTP merespons.
+
+*Catatan: Jika fitur pengiriman email (OTP/Welcome) terasa tidak masuk saat didevelopment, pastikan Anda menjalankan Worker dengan perintah:*
+```bash
+php artisan queue:work
+```
+
 Selamat melakukan *coding*! 🚀
