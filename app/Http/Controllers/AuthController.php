@@ -11,17 +11,19 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Laravel\Socialite\Facades\Socialite;
+use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\Auth\VerifyOtpRequest;
+use App\Services\AuthService;
 
 class AuthController extends Controller
 {
     protected $authService;
 
-    public function __construct(\App\Services\AuthService $authService)
+    public function __construct(AuthService $authService)
     {
         $this->authService = $authService;
     }
 
-    // --- Google Socialite Login ---
 
     public function redirectToGoogle()
     {
@@ -40,7 +42,6 @@ class AuthController extends Controller
         }
     }
 
-    // --- Manual Registration with OTP ---
 
     public function showRegister()
     {
@@ -57,45 +58,27 @@ class AuthController extends Controller
         ]);
     }
 
-    public function register(Request $request)
+    public function register(RegisterRequest $request)
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-            'role' => 'required|in:parent,child',
-        ]);
+        $data = $request->validated();
 
         $this->authService->initiateRegistration($data);
 
         return redirect()->route('auth.verify.otp.show')->with('success', 'OTP sent to your email.');
     }
 
-    public function verifyOtp(Request $request)
+    public function verifyOtp(VerifyOtpRequest $request)
     {
-        $request->validate([
-            'otp' => 'required|string',
-        ]);
+        $request->validated();
 
-        $sessionData = [
-            'email' => session('registration_email'),
-            'name' => session('registration_name'),
-            'password' => session('registration_password'),
-            'role' => session('registration_role'),
-        ];
-
-        if (!$sessionData['email'] || !$sessionData['name'] || !$sessionData['password'] || !$sessionData['role']) {
-            return redirect()->route('register')->with('error', 'Session expired. Please register again.');
+        try {
+            $user = $this->authService->verifyOtpAndCreateUser($request->otp);
+            Auth::login($user);
+            return redirect('/dashboard')->with('success', 'Registration successful!');
+        } catch (\InvalidArgumentException $e) {
+            return redirect()->route('register')->with('error', $e->getMessage());
+        } catch (\Exception $e) {
+            return back()->withErrors(['otp' => $e->getMessage()]);
         }
-
-        $user = $this->authService->verifyOtpAndCreateUser($request->otp, $sessionData);
-
-        if (!$user) {
-            return back()->withErrors(['otp' => 'Invalid or expired OTP.']);
-        }
-
-        Auth::login($user);
-
-        return redirect('/dashboard')->with('success', 'Registration successful!');
     }
 }
