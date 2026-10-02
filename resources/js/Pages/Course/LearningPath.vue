@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
-import { PhArrowLeft, PhBookOpen, PhQuestion, PhVideoCamera } from '@phosphor-icons/vue';
+import { PhArrowLeft, PhBookOpen, PhLock, PhQuestion, PhVideoCamera } from '@phosphor-icons/vue';
 import '@vue-flow/core/dist/style.css';
 import '@vue-flow/core/dist/theme-default.css';
 import { Handle, Position, VueFlow } from '@vue-flow/core';
@@ -271,7 +271,10 @@ function materialIcon(type) {
                             class="learning-flow__canvas"
                         >
                             <template #node-learningMaterial="{ data }">
-                                <article class="learning-node">
+                                <article
+                                    class="learning-node"
+                                    :class="{ 'learning-node--locked': data.index > 0 }"
+                                >
                                     <Handle
                                         type="target"
                                         :position="Position.Left"
@@ -312,7 +315,14 @@ function materialIcon(type) {
                                         <span class="text-2xl font-semibold text-foreground">
                                             {{ data.index + 1 }}
                                         </span>
+                                        <PhLock
+                                            v-if="data.index > 0"
+                                            :size="18"
+                                            class="mt-1 text-muted-foreground"
+                                            aria-label="Terkunci"
+                                        />
                                         <component
+                                            v-else
                                             :is="materialIcon(data.material.type)"
                                             :size="18"
                                             class="mt-1 text-primary"
@@ -361,6 +371,13 @@ function materialIcon(type) {
     border-radius: 1rem;
     background: white;
     box-shadow: 0 4px 0 theme('colors.stone.800');
+}
+
+.learning-node--locked {
+    border-style: dashed;
+    background: theme('colors.stone.100');
+    box-shadow: none;
+    opacity: 0.7;
 }
 
 .learning-handle {
