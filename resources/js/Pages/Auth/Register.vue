@@ -11,6 +11,7 @@ const form = useForm({
     email: '',
     password: '',
     password_confirmation: '',
+    role: 'child',
 });
 
 const submit = () => {
@@ -91,6 +92,22 @@ const submit = () => {
                 />
 
                 <InputError class="mt-2" :message="form.errors.password_confirmation" />
+            </div>
+
+            <div class="mt-4">
+                <InputLabel for="role" value="Mendaftar Sebagai" />
+
+                <select
+                    id="role"
+                    v-model="form.role"
+                    class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                >
+                    <option value="child">Anak</option>
+                    <option value="parent">Orang Tua</option>
+                </select>
+
+                <InputError class="mt-2" :message="form.errors.role" />
             </div>
 
             <div class="flex flex-col items-stretch mt-6 space-y-4">
