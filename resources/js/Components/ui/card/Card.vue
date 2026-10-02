@@ -1,23 +1,21 @@
-<script setup>
-import { cn } from '@/lib/utils';
+<script setup lang="ts">
+import type { HTMLAttributes } from 'vue'
+import { cn } from '@/lib/utils'
 
-const props = defineProps({
-    class: {
-        type: [String, Object, Array],
-        required: false,
-    },
-});
+const props = withDefaults(defineProps<{
+  class?: HTMLAttributes['class']
+  size?: 'default' | 'sm'
+}>(), {
+  size: 'default',
+})
 </script>
 
 <template>
-    <article
-        :class="
-            cn(
-                'rounded-lg border border-border bg-card text-card-foreground shadow-sm',
-                props.class
-            )
-        "
-    >
-        <slot />
-    </article>
+  <div
+    data-slot="card"
+    :data-size="size"
+    :class="cn('ring-foreground/10 bg-card text-card-foreground gap-6 overflow-hidden rounded-xl py-6 text-sm shadow-xs ring-1 has-[>img:first-child]:pt-0 data-[size=sm]:gap-4 data-[size=sm]:py-4 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl group/card flex flex-col', props.class)"
+  >
+    <slot />
+  </div>
 </template>
