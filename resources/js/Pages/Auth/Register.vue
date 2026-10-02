@@ -11,6 +11,7 @@ const form = useForm({
     email: '',
     password: '',
     password_confirmation: '',
+    role: 'child',
 });
 
 const submit = () => {
@@ -91,6 +92,39 @@ const submit = () => {
                 />
 
                 <InputError class="mt-2" :message="form.errors.password_confirmation" />
+            </div>
+
+            <div class="mt-4">
+                <InputLabel for="role" value="Mendaftar Sebagai" />
+
+                <div class="flex mt-1 bg-gray-100 rounded-lg p-1">
+                    <button
+                        type="button"
+                        @click="form.role = 'child'"
+                        :class="[
+                            'flex-1 py-2 text-sm font-medium rounded-md transition-colors',
+                            form.role === 'child' 
+                                ? 'bg-white text-indigo-700 shadow' 
+                                : 'text-gray-500 hover:text-gray-700'
+                        ]"
+                    >
+                        Anak
+                    </button>
+                    <button
+                        type="button"
+                        @click="form.role = 'parent'"
+                        :class="[
+                            'flex-1 py-2 text-sm font-medium rounded-md transition-colors',
+                            form.role === 'parent' 
+                                ? 'bg-white text-indigo-700 shadow' 
+                                : 'text-gray-500 hover:text-gray-700'
+                        ]"
+                    >
+                        Orang Tua
+                    </button>
+                </div>
+
+                <InputError class="mt-2" :message="form.errors.role" />
             </div>
 
             <div class="flex flex-col items-stretch mt-6 space-y-4">

@@ -67,6 +67,7 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
+            'role' => 'required|in:parent,child',
         ]);
 
         // Generate OTP
@@ -88,7 +89,8 @@ class AuthController extends Controller
         session([
             'registration_email' => $request->email,
             'registration_name' => $request->name,
-            'registration_password' => Hash::make($request->password)
+            'registration_password' => Hash::make($request->password),
+            'registration_role' => $request->role,
         ]);
 
         return redirect()->route('auth.verify.otp.show')->with('success', 'OTP sent to your email.');
@@ -103,8 +105,9 @@ class AuthController extends Controller
         $email = session('registration_email');
         $name = session('registration_name');
         $password = session('registration_password');
+        $role = session('registration_role');
 
-        if (!$email || !$name || !$password) {
+        if (!$email || !$name || !$password || !$role) {
             return redirect()->route('register')->with('error', 'Session expired. Please register again.');
         }
 
@@ -119,12 +122,13 @@ class AuthController extends Controller
             'name' => $name,
             'email' => $email,
             'password' => $password, // Already hashed
+            'role' => $role,
             'email_verified_at' => now(),
         ]);
 
         // Clear OTP and session
         $otpRecord->delete();
-        session()->forget(['registration_email', 'registration_name', 'registration_password']);
+        session()->forget(['registration_email', 'registration_name', 'registration_password', 'registration_role']);
 
         Auth::login($user);
 
