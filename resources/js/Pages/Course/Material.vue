@@ -1,7 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import CourseSidebarToggle from '@/Components/CourseSidebarToggle.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import {
     PhArrowLeft,
