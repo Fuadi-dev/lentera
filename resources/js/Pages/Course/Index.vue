@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
-import { PhArrowLeft, PhArrowRight, PhBookOpen } from '@phosphor-icons/vue';
+import { PhArrowLeft, PhArrowRight } from '@phosphor-icons/vue';
 
 const props = defineProps({
     course: {
@@ -59,7 +59,7 @@ const props = defineProps({
                         </p>
                     </div>
                     <img
-                        src="/maskot.png"
+                        src="/images/brand/maskot.png"
                         alt="Maskot Lentera"
                         class="w-24 h-full py-4 mr-6 md:w-36 md:mr-12"
                     />
@@ -89,28 +89,30 @@ const props = defineProps({
                                 })
                             "
                             type="button"
-                            class="p-5 text-left transition-colors border rounded-xl border-border bg-card hover:border-primary"
+                            class="flex flex-col p-5 text-left transition-all duration-200 border group min-h-56 rounded-2xl border-border bg-card hover:-translate-y-1 hover:shadow-md"
                         >
-                            <span class="flex items-center justify-between gap-3">
-                                <p class="font-bold text-md">Kelas</p>
-                                <span
-                                    class="inline-flex items-center justify-center w-10 h-10 text-sm font-bold rounded-full bg-primary text-primary-foreground"
-                                >
-                                    {{ courseClass.number }}
+                            <span class="flex items-center gap-3">
+                                <span class="text-base font-semibold text-muted-foreground">
+                                    Kelas {{ courseClass.number }}
                                 </span>
                             </span>
-                            <span class="block mt-4 text-lg font-bold text-foreground">
+
+                            <span class="block mt-5 text-2xl font-bold text-foreground">
                                 {{ courseClass.title }}
                             </span>
                             <span class="block mt-2 text-sm leading-6 text-muted-foreground">
                                 {{ courseClass.description }}
                             </span>
+
                             <span
-                                class="flex items-center gap-2 mt-4 text-sm font-medium text-primary"
+                                class="flex items-center justify-between gap-3 pt-5 mt-auto text-sm font-medium text-primary"
                             >
-                                <PhBookOpen :size="17" aria-hidden="true" />
-                                {{ courseClass.section?.length ?? 0 }} bab
-                                <PhArrowRight :size="16" aria-hidden="true" />
+                                <span>Mulai belajar</span>
+                                <PhArrowRight
+                                    :size="18"
+                                    class="transition-transform duration-200 group-hover:translate-x-1"
+                                    aria-hidden="true"
+                                />
                             </span>
                         </Link>
                     </div>

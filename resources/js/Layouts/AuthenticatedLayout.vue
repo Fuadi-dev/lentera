@@ -5,6 +5,7 @@ import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/Components/ui/tooltip';
 import { Link } from '@inertiajs/vue3';
 
 const showingNavigationDropdown = ref(false);
@@ -36,13 +37,33 @@ const showingNavigationDropdown = ref(false);
                         </div>
 
                         <div class="hidden sm:ms-6 sm:flex sm:items-center">
-                            <div class="relative ms-3">
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger as-child>
+                                        <div class="flex items-center">
+                                            <img
+                                                src="/images/ui/streak.png"
+                                                alt="Streak"
+                                                class="object-contain w-11 h-11"
+                                            />
+                                            <span class="text-base font-semibold text-orange-500"
+                                                >3</span
+                                            >
+                                        </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Streak 3 hari</TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+
+                            <div class="w-px h-8 mx-3 bg-gray-200" aria-hidden="true"></div>
+
+                            <div class="relative">
                                 <Dropdown align="right" width="48">
                                     <template #trigger>
                                         <span class="inline-flex rounded-md">
                                             <button
                                                 type="button"
-                                                class="inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out bg-white border border-transparent rounded-md hover:text-gray-700 focus:outline-none"
+                                                class="inline-flex items-center py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out bg-white border border-transparent rounded-md hover:text-gray-700 focus:outline-none"
                                             >
                                                 {{ $page.props.auth.user.name }}
 
@@ -79,6 +100,24 @@ const showingNavigationDropdown = ref(false);
                         </div>
 
                         <div class="flex items-center -me-2 sm:hidden">
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger as-child>
+                                        <div class="flex items-center me-2">
+                                            <img
+                                                src="/images/ui/streak.png"
+                                                alt="Streak"
+                                                class="object-contain w-9 h-9"
+                                            />
+                                            <span class="text-sm font-semibold text-orange-500"
+                                                >3</span
+                                            >
+                                        </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Streak 3 hari</TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+
                             <button
                                 @click="showingNavigationDropdown = !showingNavigationDropdown"
                                 class="inline-flex items-center justify-center p-2 text-gray-400 transition duration-150 ease-in-out rounded-md hover:bg-gray-100 hover:text-gray-500 focus:bg-gray-100 focus:text-gray-500 focus:outline-none"

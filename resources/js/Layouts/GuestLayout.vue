@@ -8,7 +8,7 @@ import { Link } from '@inertiajs/vue3';
         <div class="hidden lg:block lg:w-1/2">
             <img
                 class="object-cover w-full h-full px-2 py-2 rounded-3xl"
-                src="/teacher.jpg"
+                src="/images/ui/teacher.jpg"
                 alt="Ilustrasi Belajar"
             />
         </div>

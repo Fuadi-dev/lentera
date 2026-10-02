@@ -242,7 +242,7 @@ function openMaterial({ event, node }) {
                         </p>
                     </div>
                     <img
-                        src="/maskot.png"
+                        src="/images/brand/maskot.png"
                         alt="Maskot Lentera"
                         class="w-24 h-full py-4 mr-6 md:w-36 md:mr-12"
                     />
@@ -337,7 +337,14 @@ function openMaterial({ event, node }) {
                                         <span class="text-2xl font-semibold text-foreground">
                                             {{ data.index + 1 }}
                                         </span>
+                                        <PhLock
+                                            v-if="data.index > 0"
+                                            :size="18"
+                                            class="mt-1 text-muted-foreground"
+                                            aria-label="Terkunci"
+                                        />
                                         <component
+                                            v-else
                                             :is="materialIcon(data.material.type)"
                                             :size="18"
                                             class="mt-1 text-primary"

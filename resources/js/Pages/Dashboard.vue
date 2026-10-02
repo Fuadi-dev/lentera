@@ -62,7 +62,10 @@ const filteredCourses = computed(() => {
                             pintar. Kamu pasti bisa!
                         </p>
                     </div>
-                    <img src="/maskot.png" class="w-24 h-full py-4 mr-6 md:w-36 md:mr-12" />
+                    <img
+                        src="/images/brand/maskot.png"
+                        class="w-24 h-full py-4 mr-6 md:w-36 md:mr-12"
+                    />
                 </div>
 
                 <section class="space-y-4" aria-labelledby="courses-heading">
@@ -77,7 +80,7 @@ const filteredCourses = computed(() => {
                                 v-model="search"
                                 type="search"
                                 placeholder="Cari materi..."
-                                class="pl-10"
+                                class="pl-10 focus-visible:border-primary focus-visible:ring-transparent"
                                 aria-label="Cari materi"
                             />
                         </div>
@@ -90,20 +93,20 @@ const filteredCourses = computed(() => {
                         <Card
                             v-for="material in filteredCourses"
                             :key="material.id"
-                            class="flex flex-col overflow-hidden transition-shadow hover:shadow-md"
+                            class="flex flex-col p-0 overflow-hidden transition-shadow shadow-md ring-0"
                         >
                             <div class="relative aspect-[16/9] overflow-hidden bg-muted">
                                 <img
-                                    :src="material.thumbnail || '/school.jpg'"
+                                    :src="material.thumbnail || '/images/ui/school.jpg'"
                                     :alt="`Thumbnail ${material.title}`"
                                     class="object-cover w-full h-full"
                                 />
                             </div>
-                            <div class="flex flex-col flex-1 p-5">
-                                <h3 class="mt-1 text-lg font-bold text-foreground">
+                            <div class="flex flex-col flex-1 px-5">
+                                <h3 class="text-lg font-bold text-foreground">
                                     {{ material.title }}
                                 </h3>
-                                <p class="mt-2 text-sm leading-6 text-muted-foreground">
+                                <p class="text-sm leading-6 text-muted-foreground">
                                     {{ material.description }}
                                 </p>
                             </div>
@@ -111,8 +114,8 @@ const filteredCourses = computed(() => {
                                 <Button :as-child="true">
                                     <Link :href="`/dashboard/courses/${material.id}`">
                                         Pelajari
+                                        <PhArrowRight class="w-4 h-4 ml-1" aria-hidden="true" />
                                     </Link>
-                                    <PhArrowRight class="w-4 h-4 ml-1 -mr-1" aria-hidden="true" />
                                 </Button>
                             </div>
                         </Card>
