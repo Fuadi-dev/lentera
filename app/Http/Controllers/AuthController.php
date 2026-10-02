@@ -14,6 +14,13 @@ use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
 {
+    protected $authService;
+
+    public function __construct(\App\Services\AuthService $authService)
+    {
+        $this->authService = $authService;
+    }
+
     // --- Google Socialite Login ---
 
     public function redirectToGoogle()
@@ -24,23 +31,12 @@ class AuthController extends Controller
     public function handleGoogleCallback()
     {
         try {
-            $googleUser = Socialite::driver('google')->user();
-            
-            $user = User::updateOrCreate([
-                'email' => $googleUser->email,
-            ], [
-                'name' => $googleUser->name,
-                'google_id' => $googleUser->id,
-                'google_token' => $googleUser->token,
-                'google_refresh_token' => $googleUser->refreshToken,
-                'email_verified_at' => now(), // Auto verify if coming from google
-            ]);
-
+            $user = $this->authService->handleGoogleLogin();
             Auth::login($user);
-
             return redirect('/dashboard');
         } catch (\Exception $e) {
-            return redirect('/login')->with('error', 'Google login failed.');
+            \Illuminate\Support\Facades\Log::error('Google Login Error: ' . $e->getMessage());
+            return redirect('/login')->with('error', 'Google login failed: ' . $e->getMessage());
         }
     }
 
@@ -63,35 +59,14 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        $request->validate([
+        $data = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'role' => 'required|in:parent,child',
         ]);
 
-        // Generate OTP
-        $otpCode = rand(100000, 999999);
-
-        // Store OTP
-        Otp::updateOrCreate(
-            ['email' => $request->email],
-            [
-                'otp' => $otpCode,
-                'expires_at' => now()->addMinutes(15)
-            ]
-        );
-
-        // Send OTP via Email
-        Mail::to($request->email)->send(new OtpMail($otpCode));
-
-        // Store user data in session
-        session([
-            'registration_email' => $request->email,
-            'registration_name' => $request->name,
-            'registration_password' => Hash::make($request->password),
-            'registration_role' => $request->role,
-        ]);
+        $this->authService->initiateRegistration($data);
 
         return redirect()->route('auth.verify.otp.show')->with('success', 'OTP sent to your email.');
     }
@@ -102,33 +77,22 @@ class AuthController extends Controller
             'otp' => 'required|string',
         ]);
 
-        $email = session('registration_email');
-        $name = session('registration_name');
-        $password = session('registration_password');
-        $role = session('registration_role');
+        $sessionData = [
+            'email' => session('registration_email'),
+            'name' => session('registration_name'),
+            'password' => session('registration_password'),
+            'role' => session('registration_role'),
+        ];
 
-        if (!$email || !$name || !$password || !$role) {
+        if (!$sessionData['email'] || !$sessionData['name'] || !$sessionData['password'] || !$sessionData['role']) {
             return redirect()->route('register')->with('error', 'Session expired. Please register again.');
         }
 
-        $otpRecord = Otp::where('email', $email)->first();
+        $user = $this->authService->verifyOtpAndCreateUser($request->otp, $sessionData);
 
-        if (!$otpRecord || $otpRecord->otp !== $request->otp || $otpRecord->expires_at < now()) {
+        if (!$user) {
             return back()->withErrors(['otp' => 'Invalid or expired OTP.']);
         }
-
-        // OTP is valid, create user
-        $user = User::create([
-            'name' => $name,
-            'email' => $email,
-            'password' => $password, // Already hashed
-            'role' => $role,
-            'email_verified_at' => now(),
-        ]);
-
-        // Clear OTP and session
-        $otpRecord->delete();
-        session()->forget(['registration_email', 'registration_name', 'registration_password', 'registration_role']);
 
         Auth::login($user);
 
