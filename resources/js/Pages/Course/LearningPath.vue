@@ -30,13 +30,27 @@ const selectedClass = computed(() =>
 );
 
 const learningPath = computed(
-    () =>
-        selectedClass.value?.section?.flatMap((section) =>
-            section.unit.map((material) => ({
-                ...material,
-                sectionTitle: section.title,
-            }))
-        ) ?? []
+    () => {
+        if (selectedClass.value?.section) {
+            return selectedClass.value.section.flatMap((section) =>
+                section.unit.map((material) => ({
+                    ...material,
+                    sectionTitle: section.title,
+                }))
+            );
+        }
+
+        return (
+            selectedClass.value?.levels?.flatMap((level) =>
+                level.chapters?.flatMap((chapter) =>
+                    chapter.units.map((material) => ({
+                        ...material,
+                        sectionTitle: chapter.title,
+                    }))
+                )
+            ) ?? []
+        );
+    }
 );
 
 const flowContainer = ref(null);
@@ -173,6 +187,10 @@ function materialIcon(type) {
 }
 
 function openMaterial({ event, node }) {
+    if (node.data.index > 0) {
+        return;
+    }
+
     if (event.target instanceof Element && event.target.closest('a')) {
         return;
     }
@@ -286,16 +304,29 @@ function openMaterial({ event, node }) {
                             class="learning-flow__canvas"
                         >
                             <template #node-learningMaterial="{ data }">
-                                <Link
+                                <component
+                                    :is="data.index === 0 ? Link : 'div'"
                                     :href="
-                                        route('courses.material', {
-                                            course: course.id,
-                                            class: classNumber,
-                                            material: data.material.id,
-                                        })
+                                        data.index === 0
+                                            ? route('courses.material', {
+                                                  course: course.id,
+                                                  class: classNumber,
+                                                  material: data.material.id,
+                                              })
+                                            : undefined
                                     "
-                                    class="block transition-transform cursor-pointer learning-node hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                                    :aria-label="`Buka materi ${data.material.title}`"
+                                    :class="[
+                                        'block learning-node',
+                                        data.index === 0
+                                            ? 'cursor-pointer transition-transform hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2'
+                                            : 'learning-node--locked',
+                                    ]"
+                                    :aria-label="
+                                        data.index === 0
+                                            ? `Buka materi ${data.material.title}`
+                                            : `${data.material.title} terkunci`
+                                    "
+                                    :aria-disabled="data.index > 0 ? 'true' : undefined"
                                 >
                                     <Handle
                                         type="target"
@@ -340,7 +371,7 @@ function openMaterial({ event, node }) {
                                         <PhLock
                                             v-if="data.index > 0"
                                             :size="18"
-                                            class="mt-1 text-muted-foreground"
+                                            class="mt-1 text-amber-600"
                                             aria-label="Terkunci"
                                         />
                                         <component
@@ -356,7 +387,7 @@ function openMaterial({ event, node }) {
                                     >
                                         {{ data.material.title }}
                                     </h4>
-                                </Link>
+                                </component>
                             </template>
                         </VueFlow>
                     </div>
@@ -394,6 +425,14 @@ function openMaterial({ event, node }) {
     background: white;
     box-shadow: 0 4px 0 theme('colors.stone.800');
     pointer-events: auto;
+}
+
+.learning-node--locked {
+    border-color: theme('colors.stone.300');
+    background: theme('colors.stone.100');
+    box-shadow: 0 4px 0 theme('colors.stone.300');
+    cursor: not-allowed;
+    opacity: 0.8;
 }
 
 .learning-handle {

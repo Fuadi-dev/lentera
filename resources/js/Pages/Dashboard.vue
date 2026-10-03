@@ -111,7 +111,7 @@ const filteredCourses = computed(() => {
                                 </p>
                             </div>
                             <div class="flex items-center p-5 pt-0">
-                                <Button :as-child="true">
+                                <Button :as-child="true" class="text-white">
                                     <Link :href="`/dashboard/courses/${material.id}`">
                                         Pelajari
                                         <PhArrowRight class="w-4 h-4 ml-1" aria-hidden="true" />

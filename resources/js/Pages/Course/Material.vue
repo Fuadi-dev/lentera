@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import VideoSummary from '@/Components/Course/VideoSummary.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import {
     PhArrowLeft,
@@ -51,11 +52,37 @@ const sidebarOpen = ref(true);
 const courseClasses = computed(() => props.course.classes ?? []);
 
 function classUnits(courseClass) {
-    return (courseClass.section ?? []).flatMap((section) => section.unit ?? []);
+    if (courseClass.section) {
+        return courseClass.section.flatMap((section) => section.unit ?? []);
+    }
+
+    return (courseClass.levels ?? []).flatMap((level) =>
+        (level.chapters ?? []).flatMap((chapter) => chapter.units ?? [])
+    );
 }
 
-function isUnitOpen(courseClass, unit) {
-    return classUnits(courseClass)[0]?.id === unit.id;
+function classFinalTest(courseClass) {
+    if (courseClass.finalTest) {
+        return courseClass.finalTest;
+    }
+
+    return courseClass.levels?.[0]?.chapters?.[0]?.finalTest;
+}
+
+function isClassUnlocked(courseClass) {
+    return courseClass.number <= Number(props.classNumber);
+}
+
+function unitIcon(type) {
+    if (type === 'video') {
+        return PhVideoCamera;
+    }
+
+    if (type === 'quiz') {
+        return PhListChecks;
+    }
+
+    return PhBookOpen;
 }
 
 function unitHref(courseClass, unit) {
@@ -76,6 +103,26 @@ const materialIcon = computed(() => {
     }
 
     return PhBookOpen;
+});
+
+const youtubeEmbedUrl = computed(() => {
+    if (props.material.type !== 'video' || !props.material.url) {
+        return null;
+    }
+
+    try {
+        const url = new URL(props.material.url);
+        let videoId =
+            url.hostname === 'youtu.be' ? url.pathname.slice(1) : url.searchParams.get('v');
+
+        if (url.hostname.includes('youtube.com') && url.pathname.startsWith('/embed/')) {
+            videoId = url.pathname.split('/')[2];
+        }
+
+        return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+    } catch {
+        return null;
+    }
 });
 
 const score = computed(() => {
@@ -111,7 +158,7 @@ function submitQuiz() {
 
     <AuthenticatedLayout>
         <div class="px-4 pt-6 pb-12 sm:px-6 lg:px-8">
-            <div class="max-w-5xl mx-auto space-y-6">
+            <div class="max-w-[76rem] mx-auto space-y-6">
                 <header class="flex items-center gap-3 px-4 border-b h-14 shrink-0 border-border">
                     <Link
                         :href="
@@ -135,7 +182,7 @@ function submitQuiz() {
                     <SidebarProvider v-model:open="sidebarOpen" class="w-full min-h-0">
                         <Sidebar
                             variant="sidebar"
-                            class="absolute inset-y-0 left-0 h-[600px] overflow-hidden border rounded-xl border-border bg-card max-w-64"
+                            class="absolute inset-y-0 left-0 h-[600px] w-64 min-w-64 overflow-hidden rounded-xl border border-border bg-card"
                         >
                             <SidebarHeader class="border-b border-border">
                                 <SidebarMenuButton
@@ -158,7 +205,7 @@ function submitQuiz() {
                                             {{ course.title }}
                                         </p>
                                         <p class="min-w-0 font-semibold truncate">
-                                            Kelas {{ classNumber }}
+                                            Chapter {{ classNumber }}
                                         </p>
                                     </div>
                                 </SidebarMenuButton>
@@ -184,12 +231,12 @@ function submitQuiz() {
                                                                 Number(classNumber) ===
                                                                 courseClass.number
                                                             "
-                                                            :aria-label="`Buka unit Kelas ${courseClass.number}`"
-                                                            :tooltip="`Kelas ${courseClass.number}`"
+                                                            :aria-label="`Buka materi Chapter ${courseClass.number}`"
+                                                            :tooltip="`Chapter ${courseClass.number}`"
                                                         >
                                                             <span
                                                                 class="min-w-0 truncate group-data-[collapsible=icon]:hidden"
-                                                                >Kelas
+                                                                >Chapter
                                                                 {{ courseClass.number }}</span
                                                             >
                                                             <PhCaretRight
@@ -209,10 +256,7 @@ function submitQuiz() {
                                                             >
                                                                 <SidebarMenuSubButton
                                                                     v-if="
-                                                                        isUnitOpen(
-                                                                            courseClass,
-                                                                            unit
-                                                                        )
+                                                                        isClassUnlocked(courseClass)
                                                                     "
                                                                     :as-child="true"
                                                                     :is-active="
@@ -227,7 +271,10 @@ function submitQuiz() {
                                                                             )
                                                                         "
                                                                     >
-                                                                        <PhBookOpen
+                                                                        <component
+                                                                            :is="
+                                                                                unitIcon(unit.type)
+                                                                            "
                                                                             class="size-4"
                                                                             aria-hidden="true"
                                                                         />
@@ -252,6 +299,32 @@ function submitQuiz() {
                                                                     >
                                                                 </SidebarMenuSubButton>
                                                             </SidebarMenuSubItem>
+                                                            <SidebarMenuSubItem
+                                                                v-if="classFinalTest(courseClass)"
+                                                            >
+                                                                <SidebarMenuSubButton
+                                                                    disabled
+                                                                    :aria-label="`${classFinalTest(courseClass).title} terkunci`"
+                                                                >
+                                                                    <PhGraduationCap
+                                                                        class="size-4"
+                                                                        aria-hidden="true"
+                                                                    />
+                                                                    <span
+                                                                        class="min-w-0 truncate group-data-[collapsible=icon]:hidden"
+                                                                    >
+                                                                        {{
+                                                                            classFinalTest(
+                                                                                courseClass
+                                                                            ).title
+                                                                        }}
+                                                                    </span>
+                                                                    <PhLock
+                                                                        class="ml-auto size-4"
+                                                                        aria-hidden="true"
+                                                                    />
+                                                                </SidebarMenuSubButton>
+                                                            </SidebarMenuSubItem>
                                                         </SidebarMenuSub>
                                                     </CollapsibleContent>
                                                 </SidebarMenuItem>
@@ -261,23 +334,24 @@ function submitQuiz() {
                                 </SidebarGroup>
                             </SidebarContent>
                         </Sidebar>
-                        <main class="w-auto min-w-0 min-h-0 overflow-y-auto md:!ml-64">
-                            <header
-                                class="flex items-center gap-2 px-4 text-sm font-semibold h-7 text-primary"
-                            >
-                                <span>{{
-                                    material.type === 'quiz' ? 'Latihan' : 'Materi belajar'
-                                }}</span>
-                                <span class="text-muted-foreground">Kelas {{ classNumber }}</span>
-                            </header>
-
-                            <main class="p-4">
-                                <Card v-if="material.type === 'text'">
-                                    <CardHeader>
+                        <main class="flex-1 w-full min-w-0 h-full md:!ml-64">
+                            <main class="h-full px-4">
+                                <Card
+                                    v-if="material.type === 'text'"
+                                    class="w-full h-full overflow-hidden shadow-md ring-transparent"
+                                >
+                                    <CardHeader
+                                        class="relative pr-32 overflow-hidden bg-white min-h-36 sm:pr-44"
+                                    >
                                         <CardTitle class="text-2xl">{{ material.title }}</CardTitle>
-                                        <CardDescription
-                                            >Baca materi berikut dengan saksama.</CardDescription
-                                        >
+                                        <CardDescription>
+                                            Baca materi berikut dengan saksama.
+                                        </CardDescription>
+                                        <img
+                                            src="/images/brand/maskot.png"
+                                            alt="Maskot Lentera"
+                                            class="absolute bottom-0 w-24 h-auto right-4 sm:right-10 sm:w-32"
+                                        />
                                     </CardHeader>
                                     <CardContent>
                                         <p class="text-base leading-8 text-foreground">
@@ -285,7 +359,7 @@ function submitQuiz() {
                                         </p>
                                     </CardContent>
                                     <CardFooter>
-                                        <Button :as-child="true">
+                                        <Button :as-child="true" class="text-white">
                                             <Link
                                                 :href="
                                                     route('courses.learning-path', {
@@ -301,26 +375,52 @@ function submitQuiz() {
                                     </CardFooter>
                                 </Card>
 
-                                <Card v-else-if="material.type === 'video'">
-                                    <CardHeader>
-                                        <CardTitle class="text-2xl">{{ material.title }}</CardTitle>
-                                        <CardDescription
-                                            >Video pembelajaran ·
-                                            {{ material.duration }}</CardDescription
-                                        >
-                                    </CardHeader>
-                                    <CardContent>
-                                        <video
-                                            controls
-                                            class="w-full rounded-lg aspect-video bg-foreground"
-                                            :src="material.url"
-                                        >
-                                            Browser kamu tidak mendukung pemutar video.
-                                        </video>
-                                    </CardContent>
-                                </Card>
+                                <template v-else-if="material.type === 'video'">
+                                    <Card class="min-h-full !overflow-visible">
+                                        <CardHeader>
+                                            <CardTitle class="text-2xl">{{
+                                                material.title
+                                            }}</CardTitle>
+                                            <CardDescription
+                                                >Video pembelajaran ·
+                                                {{ material.duration }}</CardDescription
+                                            >
+                                        </CardHeader>
+                                        <CardContent>
+                                            <iframe
+                                                v-if="youtubeEmbedUrl"
+                                                :src="youtubeEmbedUrl"
+                                                :title="material.title"
+                                                class="w-full rounded-lg aspect-video"
+                                                allow="
+                                                    accelerometer;
+                                                    autoplay;
+                                                    clipboard-write;
+                                                    encrypted-media;
+                                                    gyroscope;
+                                                    picture-in-picture;
+                                                    web-share;
+                                                "
+                                                allowfullscreen
+                                            ></iframe>
+                                            <video
+                                                v-else
+                                                controls
+                                                class="w-full rounded-lg aspect-video bg-foreground"
+                                                :src="material.url"
+                                            >
+                                                Browser kamu tidak mendukung pemutar video.
+                                            </video>
+                                        </CardContent>
+                                    </Card>
+                                    <VideoSummary
+                                        v-if="material.summary"
+                                        :summary="material.summary"
+                                        :title="material.summaryTitle ?? 'Rangkuman Video'"
+                                    />
+                                </template>
 
-                                <Card v-else>
+                                <Card v-else-if="material.type === 'quiz'" class="h-full">
                                     <CardHeader>
                                         <CardTitle class="text-2xl">{{ material.title }}</CardTitle>
                                         <CardDescription>
