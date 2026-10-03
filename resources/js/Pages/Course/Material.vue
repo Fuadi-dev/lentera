@@ -178,11 +178,11 @@ function submitQuiz() {
                     </div>
                 </header>
 
-                <div class="relative h-[600px] overflow-hidden">
+                <div class="relative">
                     <SidebarProvider v-model:open="sidebarOpen" class="w-full min-h-0">
                         <Sidebar
                             variant="sidebar"
-                            class="absolute inset-y-0 left-0 h-[600px] w-64 min-w-64 overflow-hidden rounded-xl border border-border bg-card"
+                            class="!sticky !top-6 !bottom-auto !h-fit max-h-[calc(100vh-3rem)] w-64 min-w-64 overflow-hidden rounded-xl border border-border bg-card"
                         >
                             <SidebarHeader class="border-b border-border">
                                 <SidebarMenuButton
@@ -334,8 +334,8 @@ function submitQuiz() {
                                 </SidebarGroup>
                             </SidebarContent>
                         </Sidebar>
-                        <main class="flex-1 w-full min-w-0 h-full md:!ml-64">
-                            <main class="h-full px-4">
+                        <main class="flex-1 w-full min-w-0">
+                            <main class="px-4">
                                 <Card
                                     v-if="material.type === 'text'"
                                     class="w-full h-full overflow-hidden shadow-md ring-transparent"
@@ -412,12 +412,12 @@ function submitQuiz() {
                                                 Browser kamu tidak mendukung pemutar video.
                                             </video>
                                         </CardContent>
+                                        <VideoSummary
+                                            v-if="material.summary"
+                                            :summary="material.summary"
+                                            :title="material.summaryTitle ?? 'Rangkuman Video'"
+                                        />
                                     </Card>
-                                    <VideoSummary
-                                        v-if="material.summary"
-                                        :summary="material.summary"
-                                        :title="material.summaryTitle ?? 'Rangkuman Video'"
-                                    />
                                 </template>
 
                                 <Card v-else-if="material.type === 'quiz'" class="h-full">
