@@ -89,6 +89,11 @@ Route::get('/dashboard/courses/{course}/classes/{class}/materials/{material}', f
 
     $selectedMaterial = collect($selectedClass['section'] ?? [])
         ->flatMap(fn(array $section) => $section['unit'] ?? [])
+        ->merge(
+            collect($selectedClass['levels'] ?? [])
+                ->flatMap(fn(array $level) => $level['chapters'] ?? [])
+                ->flatMap(fn(array $chapter) => $chapter['units'] ?? [])
+        )
         ->first(fn(array $item): bool => (int) $item['id'] === $material);
 
     abort_if($selectedMaterial === null, 404);
