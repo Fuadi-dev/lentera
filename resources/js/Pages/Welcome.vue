@@ -76,18 +76,18 @@ const navLinks = [
             </Button>
         </header>
 
-        <main class="relative z-10 mx-auto w-full max-w-4xl shrink-0 px-6 pt-6 text-center">
+        <main class="relative z-10 mx-auto w-full max-w-4xl shrink-0 px-6 pt-1 text-center">
             <h1
                 class="text-[clamp(2rem,7.5vh,3.75rem)] font-bold leading-tight text-primary"
             >
                 Belajar Mandiri<br />Dengan Seru
             </h1>
-            <p class="mx-auto mt-5 max-w-xl text-lg text-gray-700 md:text-xl">
+            <p class="mx-auto mt-3 max-w-xl text-lg text-gray-700 md:text-xl">
                 Dengan Lentera, anak mendapatkan pengalaman belajar yang lebih
                 terarah
             </p>
 
-            <div class="mt-8 flex items-center justify-center gap-3">
+            <div class="mt-4 flex items-center justify-center gap-3">
                 <Button
                     as="a"
                     href="#fitur"
@@ -109,11 +109,11 @@ const navLinks = [
             </div>
         </main>
 
-        <section class="relative mt-6 flex min-h-0 flex-1 justify-center overflow-hidden">
+        <section class="relative mt-1 flex min-h-0 flex-1 justify-center overflow-hidden">
             <img
                 src="/images/ui/hero.png"
                 alt="Tampilan aplikasi Lentera di ponsel"
-                class="relative z-10 h-full w-auto max-w-full object-contain px-4 [mask-image:radial-gradient(ellipse_60%_70%_at_50%_45%,#000_45%,transparent_100%)]"
+                class="relative z-10 h-full w-auto max-w-full origin-bottom scale-[1.4] object-contain object-bottom px-4 [mask-image:radial-gradient(ellipse_58%_85%_at_50%_35%,#000_40%,transparent_100%)]"
             />
         </section>
     </div>
