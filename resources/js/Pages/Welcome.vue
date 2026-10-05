@@ -1,7 +1,11 @@
 <script setup>
-import { ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
+import { Accessibility, BookOpen, Home, Sparkles, TrendingUp } from 'lucide-vue-next';
 import { Button } from '@/Components/ui/button';
+import { Card, CardContent } from '@/Components/ui/card';
+import Footer from '@/Components/Footer.vue';
+import Faq from '@/Components/Faq.vue';
 import LoginIcon from '@/Components/LoginIcon.vue';
 
 defineProps({
@@ -20,77 +24,140 @@ defineProps({
 });
 
 const isMobileMenuOpen = ref(false);
+const isScrolled = ref(false);
+
+const handleScroll = () => {
+    isScrolled.value = window.scrollY > 8;
+};
+
+onMounted(() => {
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+});
+
+onUnmounted(() => {
+    window.removeEventListener('scroll', handleScroll);
+});
 
 const navLinks = [
     { label: 'Beranda', href: '#beranda' },
     { label: 'Tentang', href: '#tentang' },
     { label: 'Fitur', href: '#fitur' },
+    { label: 'FAQ', href: '#faq' },
     { label: 'Panduan', href: '#panduan' },
+];
+
+const features = [
+    {
+        title: 'Belajar sesuai ritme anak',
+        description:
+            'Materi interaktif yang membantu anak memahami pelajaran dengan cara yang lebih menyenangkan.',
+        icon: BookOpen,
+        class: 'md:col-span-2',
+    },
+    {
+        title: 'Pantau progres dengan mudah',
+        description: 'Orang tua bisa melihat perkembangan belajar anak dari rumah.',
+        icon: TrendingUp,
+        class: '',
+    },
+    {
+        title: 'Ramah untuk semua',
+        description: 'Pengalaman belajar yang dirancang inklusif sejak awal.',
+        icon: Accessibility,
+        class: '',
+    },
+    {
+        title: 'Materi yang dekat dengan anak',
+        description: 'Beragam pelajaran untuk menemani setiap langkah kecil anak.',
+        icon: Sparkles,
+        class: 'md:col-span-2',
+    },
 ];
 </script>
 
 <template>
     <Head title="Lentera - Belajar Mandiri Dengan Seru" />
 
-    <div
-        id="beranda"
-        class="relative flex h-dvh flex-col overflow-hidden bg-white"
-    >
+    <div id="beranda" class="relative flex flex-col overflow-hidden bg-white h-dvh">
         <header
-            class="relative z-20 mx-auto flex w-full max-w-6xl shrink-0 items-center justify-between px-4 py-4 sm:px-6 sm:py-5"
+            :class="[
+                'fixed inset-x-0 top-0 z-50 w-full border-b transition-all duration-300',
+                isScrolled
+                    ? 'border-border/50 bg-white/70 shadow-sm backdrop-blur-xl supports-[backdrop-filter]:bg-white/50'
+                    : 'border-transparent bg-white',
+            ]"
         >
-            <Link href="/" class="flex items-center">
-                <img
-                    src="/images/brand/logo-lentera.png"
-                    alt="Lentera"
-                    class="h-10 w-auto"
-                />
-            </Link>
-
-            <nav class="hidden items-center gap-8 md:flex">
-                <a
-                    v-for="item in navLinks"
-                    :key="item.label"
-                    :href="item.href"
-                    class="text-base font-medium text-gray-700 transition-colors hover:text-primary"
-                >
-                    {{ item.label }}
-                </a>
-            </nav>
-
-            <div class="hidden items-center gap-2 sm:gap-3 md:flex">
-                <Button
-                    v-if="$page.props.auth.user"
-                    :as="Link"
-                    :href="route('dashboard')"
-                    size="lg"
-                    class="rounded-xl px-4 sm:px-5"
-                >
-                    Dashboard
-                </Button>
-                <Button
-                    v-else
-                    :as="Link"
-                    :href="route('login')"
-                    size="lg"
-                    class="gap-2 rounded-xl px-4 sm:px-5"
-                >
-                    <span class="hidden sm:inline">Masuk</span>
-                    <span class="sm:hidden">Masuk</span>
-                    <LoginIcon class="size-5" />
-                </Button>
-            </div>
-
-            <!-- Hamburger Button -->
-            <button
-                class="block p-2 text-gray-700 md:hidden"
-                @click="isMobileMenuOpen = !isMobileMenuOpen"
+            <div
+                class="relative z-10 flex items-center justify-between w-full max-w-6xl px-4 py-4 mx-auto sm:px-6 sm:py-5"
             >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path v-if="!isMobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                    <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
+                <Link href="/" class="flex items-center">
+                    <img src="/images/brand/logo-lentera.png" alt="Lentera" class="w-auto h-10" />
+                </Link>
+
+                <nav class="items-center hidden gap-8 md:flex">
+                    <a
+                        v-for="item in navLinks"
+                        :key="item.label"
+                        :href="item.href"
+                        class="text-base font-medium text-gray-700 transition-colors hover:text-primary"
+                    >
+                        {{ item.label }}
+                    </a>
+                </nav>
+
+                <div class="items-center hidden gap-2 sm:gap-3 md:flex">
+                    <Button
+                        v-if="$page.props.auth.user"
+                        :as="Link"
+                        :href="route('dashboard')"
+                        size="lg"
+                        class="px-4 rounded-xl sm:px-5"
+                    >
+                        Dashboard
+                    </Button>
+                    <Button
+                        v-else
+                        :as="Link"
+                        :href="route('login')"
+                        size="lg"
+                        class="gap-2 px-4 rounded-xl sm:px-5"
+                    >
+                        <span class="hidden sm:inline">Masuk</span>
+                        <span class="sm:hidden">Masuk</span>
+                        <LoginIcon class="size-5" />
+                    </Button>
+                </div>
+
+                <!-- Hamburger Button -->
+                <button
+                    class="block p-2 text-gray-700 md:hidden"
+                    @click="isMobileMenuOpen = !isMobileMenuOpen"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-7 w-7"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            v-if="!isMobileMenuOpen"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16"
+                        />
+                        <path
+                            v-else
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12"
+                        />
+                    </svg>
+                </button>
+            </div>
         </header>
 
         <!-- Mobile Menu Overlay -->
@@ -108,13 +175,13 @@ const navLinks = [
                 {{ item.label }}
             </a>
 
-            <div class="mt-2 w-full px-6">
+            <div class="w-full px-6 mt-2">
                 <Button
                     v-if="$page.props.auth.user"
                     :as="Link"
                     :href="route('dashboard')"
                     size="lg"
-                    class="w-full rounded-xl px-4"
+                    class="w-full px-4 rounded-xl"
                 >
                     Dashboard
                 </Button>
@@ -123,7 +190,7 @@ const navLinks = [
                     :as="Link"
                     :href="route('login')"
                     size="lg"
-                    class="flex w-full items-center justify-center gap-2 rounded-xl px-4"
+                    class="flex items-center justify-center w-full gap-2 px-4 rounded-xl"
                 >
                     <span>Masuk</span>
                     <LoginIcon class="size-5" />
@@ -131,24 +198,27 @@ const navLinks = [
             </div>
         </div>
 
-        <main class="relative z-10 mx-auto w-full max-w-4xl shrink-0 px-4 pt-1 text-center sm:px-6">
+        <main
+            class="relative z-10 w-full max-w-4xl px-4 mx-auto text-center pt-28 shrink-0 sm:px-6 sm:pt-32"
+        >
             <h1
-                class="text-4xl font-bold leading-tight text-primary sm:text-5xl lg:text-[3.75rem]"
+                class="text-4xl font-bold leading-tight text-primary sm:text-5xl lg:text-[3.75rem] tracking-tighter"
             >
-                Belajar Mandiri<br />Dengan Seru
+                Belajar Mandiri di Rumah<br />Dengan Seru
             </h1>
-            <p class="mx-auto mt-3 max-w-xl text-lg text-gray-700 md:text-xl">
-                Dengan Lentera, anak mendapatkan pengalaman belajar yang lebih
-                terarah
+            <p class="max-w-xl mx-auto mt-6 text-lg text-gray-700 md:text-xl">
+                Dengan Lentera, anak mendapatkan pengalaman belajar yang lebih terarah.
             </p>
 
-            <div class="mt-4 flex flex-col items-stretch justify-center gap-3 px-4 sm:flex-row sm:items-center sm:px-0">
+            <div
+                class="flex flex-col items-stretch justify-center gap-3 px-4 mt-6 mb-4 sm:flex-row sm:items-center sm:px-0"
+            >
                 <Button
                     as="a"
                     href="#fitur"
                     variant="outline"
                     size="lg"
-                    class="rounded-xl px-6 text-foreground"
+                    class="px-6 rounded-xl text-foreground"
                 >
                     Pelajari
                 </Button>
@@ -156,7 +226,7 @@ const navLinks = [
                     :as="Link"
                     :href="canRegister ? route('register') : route('login')"
                     size="lg"
-                    class="gap-2 rounded-xl px-5"
+                    class="gap-2 px-5 rounded-xl"
                 >
                     <span>Coba Gratis</span>
                     <LoginIcon class="size-5" />
@@ -164,7 +234,7 @@ const navLinks = [
             </div>
         </main>
 
-        <section class="relative mt-1 flex min-h-0 flex-1 justify-center overflow-hidden">
+        <section class="relative flex justify-center flex-1 min-h-0 mt-1 overflow-hidden">
             <img
                 src="/images/ui/hero.png"
                 alt="Tampilan aplikasi Lentera di ponsel"
@@ -172,4 +242,90 @@ const navLinks = [
             />
         </section>
     </div>
+
+    <section id="tentang" class="py-20 bg-background sm:py-24">
+        <div class="w-full max-w-6xl px-4 mx-auto sm:px-6">
+            <div class="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
+                <div>
+                    <p class="text-sm font-semibold tracking-wide uppercase text-primary">
+                        Tentang Lentera
+                    </p>
+                    <h2
+                        class="mt-3 text-3xl font-bold leading-tight tracking-tight text-foreground sm:text-4xl"
+                    >
+                        Belajar nggak harus membosankan untuk bisa diakses semua anak
+                    </h2>
+                    <p class="max-w-xl mt-6 text-lg leading-relaxed text-muted-foreground">
+                        Lentera lahir dari satu keresahan sederhana, masih banyak anak Sekolah Dasar
+                        di Indonesia kesulitan menemukan cara belajar yang menyenangkan, sementara
+                        anak dengan kebutuhan belajar khusus sering kali tidak punya pilihan sama
+                        sekali. Kami percaya kedua masalah ini bisa diselesaikan sekaligus, dalam
+                        satu platform yang sama.
+                    </p>
+                </div>
+
+                <div class="relative flex items-end justify-center min-h-80">
+                    <div
+                        class="absolute top-0 right-0 z-20 max-w-[15rem] rounded-2xl rounded-bl-sm bg-primary px-5 py-4 text-lg font-semibold text-primary-foreground shadow-lg sm:right-4 sm:translate-x-14"
+                    >
+                        Halo, siap belajar? 👋
+                    </div>
+                    <img
+                        src="/images/brand/maskot.png"
+                        alt="Maskot Lentera menyapa"
+                        class="relative z-10 object-contain w-auto h-64 sm:h-80"
+                    />
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="fitur" class="py-20 bg-white sm:py-24">
+        <div class="w-full max-w-6xl px-4 mx-auto sm:px-6">
+            <div class="max-w-2xl">
+                <p class="text-sm font-semibold tracking-wide uppercase text-primary">
+                    Fitur Lentera
+                </p>
+                <h2
+                    class="mt-3 text-3xl font-bold leading-tight tracking-tight text-foreground sm:text-4xl"
+                >
+                    Semua yang anak butuhkan untuk belajar dengan seru
+                </h2>
+            </div>
+
+            <div class="grid gap-5 mt-12 md:grid-cols-3 md:auto-rows-[15rem]">
+                <Card
+                    v-for="feature in features"
+                    :key="feature.title"
+                    :class="[
+                        'group relative min-h-[15rem] overflow-hidden rounded-2xl border border-border bg-muted/30 shadow-none transition-colors hover:border-primary/40',
+                        feature.class,
+                    ]"
+                >
+                    <CardContent class="relative z-10 flex flex-col h-full">
+                        <div
+                            class="flex items-center justify-center rounded-xl size-11 bg-primary/10"
+                        >
+                            <component
+                                :is="feature.icon"
+                                class="size-5 text-primary"
+                                aria-hidden="true"
+                            />
+                        </div>
+                        <div class="max-w-sm mt-auto">
+                            <h3 class="text-xl font-semibold text-foreground">
+                                {{ feature.title }}
+                            </h3>
+                            <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
+                                {{ feature.description }}
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+    </section>
+
+    <Faq />
+    <Footer />
 </template>
