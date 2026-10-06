@@ -30,6 +30,7 @@
         "@laravel/multiplex": "^0.4.1"
     },
     "dependencies": {
+        "@lucide/vue": "^1.52.0",
         "@phosphor-icons/vue": "^2.2.1",
         "@vue-flow/core": "^1.48.2",
         "@vueuse/core": "^15.0.0",
