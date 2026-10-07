@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import QuizActivity from '@/Components/Course/QuizActivity.vue';
 import VideoSummary from '@/Components/Course/VideoSummary.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import {
@@ -21,7 +22,6 @@ import CardDescription from '@/Components/ui/card/CardDescription.vue';
 import CardFooter from '@/Components/ui/card/CardFooter.vue';
 import CardHeader from '@/Components/ui/card/CardHeader.vue';
 import CardTitle from '@/Components/ui/card/CardTitle.vue';
-import Input from '@/Components/ui/input/Input.vue';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/Components/ui/collapsible';
 import {
     Sidebar,
@@ -45,11 +45,23 @@ const props = defineProps({
     material: { type: Object, required: true },
 });
 
-const answers = ref({});
-const submitted = ref(false);
 const sidebarOpen = ref(true);
+const quizCompleted = ref(null);
 
 const courseClasses = computed(() => props.course.classes ?? []);
+
+const chapterUnits = computed(() => {
+    const selectedClass = courseClasses.value.find(
+        (courseClass) => courseClass.number === Number(props.classNumber)
+    );
+
+    return (
+        selectedClass?.levels
+            ?.flatMap((level) => level.chapters ?? [])
+            .find((chapter) => chapter.units?.some((unit) => unit.id === props.material.id))
+            ?.units ?? []
+    );
+});
 
 function classUnits(courseClass) {
     if (courseClass.section) {
@@ -125,31 +137,8 @@ const youtubeEmbedUrl = computed(() => {
     }
 });
 
-const score = computed(() => {
-    if (!submitted.value || props.material.type !== 'quiz') {
-        return 0;
-    }
-
-    return (props.material.questions ?? []).reduce((total, question) => {
-        const answer = answers.value[question.id]?.trim().toLowerCase();
-        const expected = Array.isArray(question.answer) ? question.answer : [question.answer];
-
-        return expected.some((value) => String(value).toLowerCase() === answer)
-            ? total + (question.points ?? 0)
-            : total;
-    }, 0);
-});
-
-const totalPoints = computed(() =>
-    (props.material.questions ?? []).reduce((total, question) => total + (question.points ?? 0), 0)
-);
-
-const percentage = computed(() =>
-    totalPoints.value ? (score.value / totalPoints.value) * 100 : 0
-);
-
-function submitQuiz() {
-    submitted.value = true;
+function handleQuizCompleted(result) {
+    quizCompleted.value = result;
 }
 </script>
 
@@ -159,7 +148,9 @@ function submitQuiz() {
     <AuthenticatedLayout>
         <div class="px-4 pt-6 pb-12 sm:px-6 lg:px-8">
             <div class="max-w-[76rem] mx-auto space-y-6">
-                <header class="flex items-center gap-3 px-4 border-b h-14 shrink-0 border-border">
+                <header
+                    class="flex items-center gap-3 px-4 pt-6 pb-12 border-b border-border h-14 shrink-0"
+                >
                     <Link
                         :href="
                             route('courses.learning-path', {
@@ -416,106 +407,31 @@ function submitQuiz() {
                                             v-if="material.summary"
                                             :summary="material.summary"
                                             :title="material.summaryTitle ?? 'Rangkuman Video'"
+                                            :source="material.source"
                                         />
                                     </Card>
                                 </template>
 
-                                <Card v-else-if="material.type === 'quiz'" class="h-full">
-                                    <CardHeader>
-                                        <CardTitle class="text-2xl">{{ material.title }}</CardTitle>
-                                        <CardDescription>
-                                            Jawab semua pertanyaan. Nilai lulus minimal
-                                            {{ material.passingScore }}%.
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent class="space-y-8">
-                                        <fieldset
-                                            v-for="(question, questionIndex) in material.questions"
-                                            :key="question.id"
-                                            class="space-y-4"
-                                        >
-                                            <legend class="font-semibold text-foreground">
-                                                {{ questionIndex + 1 }}. {{ question.question }}
-                                            </legend>
-
-                                            <div
-                                                v-if="question.type === 'multiple_choice'"
-                                                class="space-y-3"
-                                            >
-                                                <label
-                                                    v-for="option in question.options"
-                                                    :key="option.id"
-                                                    class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer border-border hover:bg-muted"
-                                                >
-                                                    <input
-                                                        v-model="answers[question.id]"
-                                                        type="radio"
-                                                        :name="question.id"
-                                                        :value="option.id"
-                                                        class="text-primary focus:ring-primary"
-                                                    />
-                                                    <span>{{ option.text }}</span>
-                                                </label>
-                                            </div>
-                                            <Input
-                                                v-else
-                                                v-model="answers[question.id]"
-                                                placeholder="Tulis jawabanmu"
-                                                :aria-label="`Jawaban untuk ${question.question}`"
-                                            />
-
-                                            <p
-                                                v-if="submitted"
-                                                class="text-sm"
-                                                :class="{
-                                                    'text-green-600': (Array.isArray(
-                                                        question.answer
-                                                    )
-                                                        ? question.answer
-                                                        : [question.answer]
-                                                    ).some(
-                                                        (value) =>
-                                                            String(value).toLowerCase() ===
-                                                            answers[question.id]
-                                                                ?.trim()
-                                                                .toLowerCase()
-                                                    ),
-                                                    'text-destructive': !(
-                                                        Array.isArray(question.answer)
-                                                            ? question.answer
-                                                            : [question.answer]
-                                                    ).some(
-                                                        (value) =>
-                                                            String(value).toLowerCase() ===
-                                                            answers[question.id]
-                                                                ?.trim()
-                                                                .toLowerCase()
-                                                    ),
-                                                }"
-                                            >
-                                                {{ question.explanation }}
-                                            </p>
-                                        </fieldset>
-                                    </CardContent>
-                                    <CardFooter
-                                        class="flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between"
+                                <template v-else-if="material.type === 'quiz'">
+                                    <QuizActivity
+                                        :unit="material"
+                                        :chapter-units="chapterUnits"
+                                        @completed="handleQuizCompleted"
+                                    />
+                                    <p
+                                        v-if="quizCompleted"
+                                        class="mt-4 text-sm font-semibold"
+                                        :class="
+                                            quizCompleted.passed
+                                                ? 'text-green-600'
+                                                : 'text-muted-foreground'
+                                        "
+                                        aria-live="polite"
                                     >
-                                        <div
-                                            v-if="submitted"
-                                            class="flex items-center gap-2 text-sm font-semibold"
-                                        >
-                                            <PhCheckCircle
-                                                :size="20"
-                                                class="text-primary"
-                                                aria-hidden="true"
-                                            />
-                                            Nilai {{ score }}/{{ totalPoints }} ({{ percentage }}%)
-                                        </div>
-                                        <Button type="button" @click="submitQuiz">
-                                            {{ submitted ? 'Periksa lagi' : 'Periksa jawaban' }}
-                                        </Button>
-                                    </CardFooter>
-                                </Card>
+                                        {{ quizCompleted.passed ? 'Quiz selesai dan lulus.' : 'Quiz selesai.' }}
+                                        Skor: {{ quizCompleted.score }}.
+                                    </p>
+                                </template>
                             </main>
                         </main>
                     </SidebarProvider>

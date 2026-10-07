@@ -29,29 +29,27 @@ const selectedClass = computed(() =>
     props.course.classes?.find((courseClass) => courseClass.number === Number(props.classNumber))
 );
 
-const learningPath = computed(
-    () => {
-        if (selectedClass.value?.section) {
-            return selectedClass.value.section.flatMap((section) =>
-                section.unit.map((material) => ({
-                    ...material,
-                    sectionTitle: section.title,
-                }))
-            );
-        }
-
-        return (
-            selectedClass.value?.levels?.flatMap((level) =>
-                level.chapters?.flatMap((chapter) =>
-                    chapter.units.map((material) => ({
-                        ...material,
-                        sectionTitle: chapter.title,
-                    }))
-                )
-            ) ?? []
+const learningPath = computed(() => {
+    if (selectedClass.value?.section) {
+        return selectedClass.value.section.flatMap((section) =>
+            section.unit.map((material) => ({
+                ...material,
+                sectionTitle: section.title,
+            }))
         );
     }
-);
+
+    return (
+        selectedClass.value?.levels?.flatMap((level) =>
+            level.chapters?.flatMap((chapter) =>
+                chapter.units.map((material) => ({
+                    ...material,
+                    sectionTitle: chapter.title,
+                }))
+            )
+        ) ?? []
+    );
+});
 
 const flowContainer = ref(null);
 const containerWidth = ref(0);
