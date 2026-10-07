@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 use App\Models\Subject;
 use App\Models\Classes;
 use App\Models\Level;
@@ -19,111 +18,154 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Buat Orang Tua & Siswa
-        $parent = Parents::factory()->create([
-            'name' => 'Budi Santoso',
-            'email' => 'budi@example.com',
-        ]);
+        // 1. Buat Orang Tua & Siswa Default
+        $parent = Parents::firstOrCreate(
+            ['email' => 'budi@example.com'],
+            ['name' => 'Budi Santoso']
+        );
         
-        $student = Student::factory()->create([
-            'parent_id' => $parent->id,
-            'name' => 'Andi',
-        ]);
+        Student::firstOrCreate(
+            ['name' => 'Andi'],
+            ['parent_id' => $parent->id]
+        );
 
-        // 2. Buat Pelajaran Matematika
-        $math = Subject::factory()->create([
-            'title' => 'Matematika',
-            'description' => 'Pelajaran berhitung yang menyenangkan.',
-            'thumbnail' => '/images/subjects/math.png',
-        ]);
+        // 2. Baca file JSON
+        $jsonPath = base_path('data/courses.json');
+        if (!file_exists($jsonPath)) {
+            $this->command->warn("File courses.json tidak ditemukan!");
+            return;
+        }
 
-        // 3. Buat Kelas 1 untuk Matematika
-        $class1 = Classes::factory()->create([
-            'subject_id' => $math->id,
-            'number' => 1,
-            'title' => 'Kelas 1',
-            'description' => 'Materi dasar untuk siswa SD kelas 1',
-        ]);
+        $json = file_get_contents($jsonPath);
+        $subjects = json_decode($json, true);
 
-        // 4. Buat Level 1 di Kelas 1
-        $level1 = Level::factory()->create([
-            'class_id' => $class1->id,
-            'number' => 1,
-            'title' => 'Tingkat 1: Pengenalan Angka',
-            'description' => 'Mengenal angka 1 sampai 10 dan dasar penjumlahan',
-        ]);
+        if (!$subjects) {
+            $this->command->warn("Gagal membaca atau mem-parsing courses.json!");
+            return;
+        }
 
-        // 5. Buat Chapter (Bab) di Level 1
-        $chapter1 = Chapter::factory()->create([
-            'level_id' => $level1->id,
-            'number' => 1,
-            'title' => 'Bab 1: Menghitung Angka 1-10',
-            'description' => 'Ayo belajar menghitung dengan benda-benda di sekitar kita',
-        ]);
+        foreach ($subjects as $subjectData) {
+            $subject = Subject::updateOrCreate(
+                ['id' => $subjectData['id']],
+                [
+                    'title' => $subjectData['title'],
+                    'description' => $subjectData['description'] ?? null,
+                    'thumbnail' => $subjectData['thumbnail'] ?? null,
+                ]
+            );
 
-        // 6. Buat Units untuk Bab 1
-        // Unit 1: Video
-        Unit::factory()->create([
-            'chapter_id' => $chapter1->id,
-            'order' => 1,
-            'type' => 'video',
-            'title' => 'Video: Mari Berhitung 1-10',
-            'media_url' => 'https://www.youtube.com/watch?v=example',
-            'duration' => '02:30',
-        ]);
+            if (isset($subjectData['classes'])) {
+                foreach ($subjectData['classes'] as $classData) {
+                    $class = Classes::updateOrCreate(
+                        ['id' => $classData['id']],
+                        [
+                            'subject_id' => $subject->id,
+                            'number' => $classData['number'],
+                            'title' => $classData['title'],
+                            'description' => $classData['description'] ?? null,
+                        ]
+                    );
 
-        // Unit 2: Text/Materi Bacaan
-        Unit::factory()->create([
-            'chapter_id' => $chapter1->id,
-            'order' => 2,
-            'type' => 'text',
-            'title' => 'Membaca Angka',
-            'content' => 'Angka 1 bentuknya seperti tiang. Angka 2 bentuknya seperti bebek. Angka 3 seperti telinga...',
-        ]);
+                    if (isset($classData['levels'])) {
+                        foreach ($classData['levels'] as $levelData) {
+                            $level = Level::updateOrCreate(
+                                ['id' => $levelData['id']],
+                                [
+                                    'class_id' => $class->id,
+                                    'number' => $levelData['number'],
+                                    'title' => $levelData['title'],
+                                    'description' => $levelData['description'] ?? null,
+                                ]
+                            );
 
-        // Unit 3: Quiz Kecil
-        $unitQuiz = Unit::factory()->create([
-            'chapter_id' => $chapter1->id,
-            'order' => 3,
-            'type' => 'quiz',
-            'title' => 'Kuis Latihan Berhitung',
-            'passing_score' => 100,
-        ]);
+                            if (isset($levelData['chapters'])) {
+                                foreach ($levelData['chapters'] as $chapterData) {
+                                    $chapter = Chapter::updateOrCreate(
+                                        ['id' => $chapterData['id']],
+                                        [
+                                            'level_id' => $level->id,
+                                            'number' => $chapterData['number'],
+                                            'title' => $chapterData['title'],
+                                            'description' => $chapterData['description'] ?? null,
+                                        ]
+                                    );
 
-        // 7. Buat Pertanyaan untuk Quiz
-        $question1 = Question::factory()->create([
-            'unit_id' => $unitQuiz->id,
-            'type' => 'multiple_choice',
-            'question' => 'Berapa jumlah mata kita?',
-            'points' => 10,
-        ]);
+                                    if (isset($chapterData['units'])) {
+                                        foreach ($chapterData['units'] as $unitData) {
+                                            $unit = Unit::updateOrCreate(
+                                                ['id' => $unitData['id']],
+                                                [
+                                                    'chapter_id' => $chapter->id,
+                                                    'order' => $unitData['order'],
+                                                    'type' => $unitData['type'],
+                                                    'title' => $unitData['title'],
+                                                    'content' => $unitData['content'] ?? null,
+                                                    'media_url' => $unitData['url'] ?? null,
+                                                    'duration' => $unitData['duration'] ?? null,
+                                                    'passing_score' => $unitData['passingScore'] ?? null,
+                                                ]
+                                            );
 
-        $optA = QuestionOption::factory()->create(['question_id' => $question1->id, 'text' => 'Satu']);
-        $optB = QuestionOption::factory()->create(['question_id' => $question1->id, 'text' => 'Dua']);
-        $optC = QuestionOption::factory()->create(['question_id' => $question1->id, 'text' => 'Tiga']);
-        
-        // Update jawaban yang benar
-        $question1->update(['answer' => [$optB->id]]);
+                                            if (isset($unitData['questions'])) {
+                                                foreach ($unitData['questions'] as $qData) {
+                                                    // Map answer ids if options exist to make them globally unique
+                                                    $rawAnswer = is_array($qData['answer']) ? $qData['answer'] : [$qData['answer']];
+                                                    $mappedAnswer = $rawAnswer;
 
-        // 8. Buat Tes Akhir Bab
-        FinalTest::factory()->create([
-            'chapter_id' => $chapter1->id,
-            'title' => 'Ujian Akhir Bab 1',
-            'minimum_score' => 70,
-            'question_count' => 1,
-            'unlocks_next_level' => true,
-        ]);
+                                                    if (isset($qData['options'])) {
+                                                        $mappedAnswer = [];
+                                                        foreach ($rawAnswer as $ans) {
+                                                            $mappedAnswer[] = $qData['id'] . '-' . $ans;
+                                                        }
+                                                    }
 
-        // Generate sedikit data Bahasa Indonesia
-        $bahasa = Subject::factory()->create([
-            'title' => 'Bahasa Indonesia',
-            'description' => 'Belajar membaca dan mengeja huruf.',
-        ]);
-        
-        $class1Bahasa = Classes::factory()->create([
-            'subject_id' => $bahasa->id,
-            'number' => 1,
-            'title' => 'Kelas 1',
-        ]);
+                                                    $question = Question::updateOrCreate(
+                                                        ['id' => $qData['id']],
+                                                        [
+                                                            'unit_id' => $unit->id,
+                                                            'type' => $qData['type'],
+                                                            'question' => $qData['question'],
+                                                            'answer' => $mappedAnswer,
+                                                            'explanation' => $qData['explanation'] ?? null,
+                                                            'points' => $qData['points'] ?? 10,
+                                                        ]
+                                                    );
+
+                                                    if (isset($qData['options'])) {
+                                                        foreach ($qData['options'] as $optData) {
+                                                            QuestionOption::updateOrCreate(
+                                                                ['id' => $qData['id'] . '-' . $optData['id']],
+                                                                [
+                                                                    'question_id' => $question->id,
+                                                                    'text' => $optData['text'],
+                                                                ]
+                                                            );
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    if (isset($chapterData['finalTest'])) {
+                                        FinalTest::updateOrCreate(
+                                            ['chapter_id' => $chapter->id],
+                                            [
+                                                'title' => $chapterData['finalTest']['title'],
+                                                'minimum_score' => $chapterData['finalTest']['minimumScore'],
+                                                'question_count' => $chapterData['finalTest']['questionCount'],
+                                                'unlocks_next_level' => $chapterData['finalTest']['unlocksNextLevel'] ?? false,
+                                            ]
+                                        );
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        $this->command->info("Data berhasil di-seed dari courses.json!");
     }
 }
