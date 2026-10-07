@@ -29,4 +29,29 @@ class RegisterRequest extends FormRequest
             'role' => 'required|in:parent,child',
         ];
     }
+
+    /**
+     * Get the custom validation messages for the request.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Nama wajib diisi.',
+            'name.string' => 'Nama harus berupa teks.',
+            'name.max' => 'Nama maksimal terdiri dari 255 karakter.',
+            'email.required' => 'Email wajib diisi.',
+            'email.string' => 'Email harus berupa teks.',
+            'email.email' => 'Format email tidak valid.',
+            'email.max' => 'Email maksimal terdiri dari 255 karakter.',
+            'email.unique' => 'Email sudah terdaftar.',
+            'password.required' => 'Password wajib diisi.',
+            'password.string' => 'Password harus berupa teks.',
+            'password.min' => 'Password minimal terdiri dari 8 karakter.',
+            'password.confirmed' => 'Konfirmasi password tidak cocok.',
+            'role.required' => 'Role wajib dipilih.',
+            'role.in' => 'Role yang dipilih tidak valid.',
+        ];
+    }
 }
