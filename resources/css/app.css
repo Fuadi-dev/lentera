@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap');
+@import 'tw-animate-css';
 
 @tailwind base;
 @tailwind components;
@@ -164,4 +165,20 @@
     font-weight: normal;
     font-style: normal;
     font-display: swap;
+}
+
+html.font-size-small {
+    font-size: 93.75%;
+}
+
+html.font-size-medium {
+    font-size: 100%;
+}
+
+html.font-size-large {
+    font-size: 112.5%;
+}
+
+html.dyslexia-font body {
+    font-family: 'Dyslexia', sans-serif;
 }
