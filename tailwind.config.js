@@ -57,6 +57,7 @@ export default {
             },
             fontFamily: {
                 sans: ['Manrope', ...defaultTheme.fontFamily.sans],
+                dyslexia: ['Dyslexia'],
             },
             borderRadius: {
                 lg: 'var(--radius)',
