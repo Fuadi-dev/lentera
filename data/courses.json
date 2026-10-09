@@ -96,6 +96,48 @@
                                                 "points": 10
                                             }
                                         ]
+                                    },
+                                    {
+                                        "id": 1005,
+                                        "level": 5,
+                                        "order": 5,
+                                        "type": "question",
+                                        "title": "Masukkan Biji-bijian",
+                                        "question": "Masukkan 7 biji-bijian ke dalam kotak.",
+                                        "items": [
+                                            {
+                                                "id": "seed",
+                                                "label": "Biji-bijian",
+                                                "repeatable": true,
+                                                "image": "/images/ui/streak.png"
+                                            }
+                                        ],
+                                        "dropZones": [
+                                            {
+                                                "id": "box",
+                                                "label": "Masukkan ke dalam kotak"
+                                            }
+                                        ],
+                                        "answer": {
+                                            "box": 7
+                                        },
+                                        "explanation": "Hebat! Ada 7 biji-bijian di dalam kotak."
+                                    },
+                                    {
+                                        "id": 1006,
+                                        "level": 6,
+                                        "order": 6,
+                                        "type": "question",
+                                        "mode": "ordering",
+                                        "title": "Urutkan Angka",
+                                        "question": "Susun angka dari yang paling kecil ke paling besar.",
+                                        "items": [
+                                            { "id": "number-3", "label": "3" },
+                                            { "id": "number-1", "label": "1" },
+                                            { "id": "number-2", "label": "2" }
+                                        ],
+                                        "answer": ["number-1", "number-2", "number-3"],
+                                        "explanation": "Benar! Urutan angkanya adalah 1, 2, 3."
                                     }
                                 ],
                                 "finalTest": {
