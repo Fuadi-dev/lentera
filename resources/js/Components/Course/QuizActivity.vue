@@ -112,7 +112,12 @@ function chooseOption(option) {
     }
 
     selectedOption.value = option.id;
-    const isCorrect = option.id === currentQuestion.value.answer;
+
+    const expectedAnswers = Array.isArray(currentQuestion.value.answer)
+        ? currentQuestion.value.answer
+        : [currentQuestion.value.answer];
+    
+    const isCorrect = expectedAnswers.includes(option.id);
 
     if (isCorrect) {
         answerState.value = 'correct';

@@ -32,6 +32,7 @@ const chapterUnits = computed(() => {
     );
 });
 
+
 function handleQuizCompleted(result) {
     quizCompleted.value = result;
 }
