@@ -3,6 +3,8 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CourseController;
 use Inertia\Inertia;
 
 Route::get('/', function () {
@@ -18,92 +20,12 @@ Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::get('/dashboard/courses/{course}', function (string $course) {
-    $courses = json_decode(
-        file_get_contents(base_path('data/courses.json')),
-        true,
-        512,
-        JSON_THROW_ON_ERROR
-    );
 
-    $selectedCourse = collect($courses)->first(
-        fn(array $item): bool => (string) $item['id'] === $course
-    );
-
-    abort_if($selectedCourse === null, 404);
-
-    return Inertia::render('Course/Index', [
-        'course' => $selectedCourse,
-    ]);
-})->middleware(['auth', 'verified'])->name('courses.show');
-
-Route::get('/dashboard/courses/{course}/classes/{class}', function (string $course, int $class) {
-    $courses = json_decode(
-        file_get_contents(base_path('data/courses.json')),
-        true,
-        512,
-        JSON_THROW_ON_ERROR
-    );
-
-    $selectedCourse = collect($courses)->first(
-        fn(array $item): bool => (string) $item['id'] === $course
-    );
-
-    abort_if($selectedCourse === null, 404);
-    abort_if(
-        collect($selectedCourse['classes'] ?? [])->doesntContain(
-            fn(array $item): bool => (int) $item['number'] === $class
-        ),
-        404
-    );
-
-    return Inertia::render('Course/LearningPath', [
-        'course' => $selectedCourse,
-        'classNumber' => $class,
-    ]);
-})->middleware(['auth', 'verified'])->name('courses.learning-path');
-
-Route::get('/dashboard/courses/{course}/classes/{class}/materials/{material}', function (
-    string $course,
-    int $class,
-    int $material
-) {
-    $courses = json_decode(
-        file_get_contents(base_path('data/courses.json')),
-        true,
-        512,
-        JSON_THROW_ON_ERROR
-    );
-
-    $selectedCourse = collect($courses)->first(
-        fn(array $item): bool => (string) $item['id'] === $course
-    );
-
-    abort_if($selectedCourse === null, 404);
-
-    $selectedClass = collect($selectedCourse['classes'] ?? [])->first(
-        fn(array $item): bool => (int) $item['number'] === $class
-    );
-
-    abort_if($selectedClass === null, 404);
-
-    $selectedMaterial = collect($selectedClass['section'] ?? [])
-        ->flatMap(fn(array $section) => $section['unit'] ?? [])
-        ->merge(
-            collect($selectedClass['levels'] ?? [])
-                ->flatMap(fn(array $level) => $level['chapters'] ?? [])
-                ->flatMap(fn(array $chapter) => $chapter['units'] ?? [])
-        )
-        ->first(fn(array $item): bool => (int) $item['id'] === $material);
-
-    abort_if($selectedMaterial === null, 404);
-
-    return Inertia::render('Course/Material', [
-        'course' => $selectedCourse,
-        'classNumber' => $class,
-        'material' => $selectedMaterial,
-    ]);
-})->middleware(['auth', 'verified'])->name('courses.material');
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/dashboard/courses/{course}', [CourseController::class, 'show'])->name('courses.show');
+    Route::get('/dashboard/courses/{course}/classes/{class}', [CourseController::class, 'learningPath'])->name('courses.learning-path');
+    Route::get('/dashboard/courses/{course}/classes/{class}/materials/{material}', [CourseController::class, 'material'])->name('courses.material');
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -111,7 +33,6 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-use App\Http\Controllers\AuthController;
 
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);

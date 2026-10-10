@@ -11,12 +11,12 @@ const props = defineProps({
 });
 
 function youtubeEmbedUrl() {
-    if (!props.material.url) {
+    if (!props.material.media_url) {
         return null;
     }
 
     try {
-        const url = new URL(props.material.url);
+        const url = new URL(props.material.media_url);
         let videoId =
             url.hostname === 'youtu.be' ? url.pathname.slice(1) : url.searchParams.get('v');
 
@@ -58,7 +58,7 @@ function youtubeEmbedUrl() {
                 v-else
                 controls
                 class="w-full rounded-lg aspect-video bg-foreground"
-                :src="material.url"
+                :src="material.media_url"
             >
                 Browser kamu tidak mendukung pemutar video.
             </video>
