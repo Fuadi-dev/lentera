@@ -17,6 +17,58 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
+    if (auth()->user()->role === 'parent') {
+        return Inertia::render('ParentDashboard', [
+            'children' => [
+                [
+                    'name' => 'Alya Putri',
+                    'class' => 'Kelas 5A',
+                    'avatar' => 'AP',
+                    'overallProgress' => 78,
+                    'completedLessons' => 18,
+                    'totalLessons' => 24,
+                    'streak' => 5,
+                    'lastActivity' => 'Menyelesaikan Pecahan dan Desimal',
+                    'subjects' => [
+                        ['name' => 'Matematika', 'progress' => 85, 'color' => 'bg-primary'],
+                        ['name' => 'Bahasa Indonesia', 'progress' => 72, 'color' => 'bg-primary'],
+                        ['name' => 'IPA', 'progress' => 68, 'color' => 'bg-primary'],
+                    ],
+                ],
+                [
+                    'name' => 'Bima Pratama',
+                    'class' => 'Kelas 3B',
+                    'avatar' => 'BP',
+                    'overallProgress' => 64,
+                    'completedLessons' => 14,
+                    'totalLessons' => 22,
+                    'streak' => 3,
+                    'lastActivity' => 'Menyelesaikan Perkalian Dasar',
+                    'subjects' => [
+                        ['name' => 'Matematika', 'progress' => 70, 'color' => 'bg-primary'],
+                        ['name' => 'Bahasa Indonesia', 'progress' => 61, 'color' => 'bg-primary'],
+                        ['name' => 'IPA', 'progress' => 58, 'color' => 'bg-primary'],
+                    ],
+                ],
+                [
+                    'name' => 'Citra Lestari',
+                    'class' => 'Kelas 2A',
+                    'avatar' => 'CL',
+                    'overallProgress' => 52,
+                    'completedLessons' => 10,
+                    'totalLessons' => 20,
+                    'streak' => 2,
+                    'lastActivity' => 'Membaca Cerita Pendek',
+                    'subjects' => [
+                        ['name' => 'Matematika', 'progress' => 55, 'color' => 'bg-primary'],
+                        ['name' => 'Bahasa Indonesia', 'progress' => 63, 'color' => 'bg-primary'],
+                        ['name' => 'IPA', 'progress' => 39, 'color' => 'bg-primary'],
+                    ],
+                ],
+            ],
+        ]);
+    }
+
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -42,4 +94,4 @@ Route::post('/auth/google/role', [AuthController::class, 'completeGoogleRegistra
 Route::get('/auth/verify-otp', [AuthController::class, 'showVerifyOtp'])->name('auth.verify.otp.show');
 Route::post('/auth/verify-otp', [AuthController::class, 'verifyOtp'])->name('auth.verify.otp');
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';
