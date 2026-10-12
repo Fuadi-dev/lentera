@@ -11,11 +11,16 @@ import Card from '@/Components/ui/card/Card.vue';
 import CardContent from '@/Components/ui/card/CardContent.vue';
 import CardDescription from '@/Components/ui/card/CardDescription.vue';
 import CardFooter from '@/Components/ui/card/CardFooter.vue';
+import NextMaterialButton from '@/Components/Course/NextMaterialButton.vue';
+import MarkUnitDoneButton from '@/Components/Course/MarkUnitDoneButton.vue';
 import CardHeader from '@/Components/ui/card/CardHeader.vue';
 import CardTitle from '@/Components/ui/card/CardTitle.vue';
 
 const props = defineProps({
     material: { type: Object, required: true },
+    nextUnitHref: { type: String, default: null },
+    nextUnitTitle: { type: String, default: '' },
+    completed: { type: Boolean, default: false },
 });
 
 const answers = ref({
@@ -56,6 +61,29 @@ function isOrderingCorrect(question) {
         actualAnswer.length === expectedAnswer.length &&
         actualAnswer.every((itemId, index) => itemId === expectedAnswer[index])
     );
+}
+
+function isDropZoneCorrect(question) {
+    const expectedAnswer = question.answer ?? {};
+    const actualAnswer = answers.value[question.id] ?? {};
+
+    return Object.keys(expectedAnswer).every((zoneId) => {
+        const expectedItems = Array.isArray(expectedAnswer[zoneId])
+            ? expectedAnswer[zoneId]
+            : [];
+        const actualItems = actualAnswer[zoneId] ?? [];
+
+        return (
+            actualItems.length === expectedItems.length &&
+            expectedItems.every((itemId) => actualItems.includes(itemId))
+        );
+    });
+}
+
+function isAnswerCorrect(question) {
+    return isOrderingQuestion(question)
+        ? isOrderingCorrect(question)
+        : isDropZoneCorrect(question);
 }
 
 function isQuestionItemPlaced(questionId, itemId) {
@@ -155,7 +183,7 @@ function handleDragEnd(event) {
                                 :image="item.image"
                             />
                         </ChoiceDropZone>
-                        <div>
+                        <div class="space-y-4">
                             <QuestionDropZone
                                 v-for="zone in questionZones(material)"
                                 :key="zone.id"
@@ -200,12 +228,24 @@ function handleDragEnd(event) {
                     }}
                 </template>
                 <template v-else>
-                    {{ material.explanation ?? 'Jawaban sudah diperiksa.' }}
+                    {{
+                        isDropZoneCorrect(material)
+                            ? (material.explanation ?? 'Jawaban benar.')
+                            : 'Belum tepat. Coba periksa kembali.'
+                    }}
                 </template>
             </p>
-            <Button type="button" @click="submitted = true">
-                {{ submitted ? 'Periksa lagi' : 'Periksa jawaban' }}
-            </Button>
+            <div class="flex gap-3">
+                <Button type="button" @click="submitted = true">
+                    {{ submitted && isAnswerCorrect(material) ? 'Benar' : 'Periksa jawaban' }}
+                </Button>
+                <MarkUnitDoneButton :unit-id="material.id" :completed="completed" />
+            </div>
+            <NextMaterialButton
+                v-if="nextUnitHref"
+                :href="nextUnitHref"
+                :title="nextUnitTitle"
+            />
         </CardFooter>
     </Card>
 </template>

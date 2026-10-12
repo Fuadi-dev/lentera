@@ -18,7 +18,7 @@ class CourseController extends Controller
     public function show(CourseRequest $request, string $course)
     {
         $courseData = $this->courseService->getCourse($course);
-        
+
         return Inertia::render('Course/Index', [
             'course' => $courseData,
         ]);
@@ -34,7 +34,7 @@ class CourseController extends Controller
         ]);
     }
 
-    public function material(CourseRequest $request, string $course, int $class, int $material)
+    public function material(CourseRequest $request, string $course, int $class, string $material)
     {
         $data = $this->courseService->getMaterial($course, $class, $material);
 
@@ -42,6 +42,14 @@ class CourseController extends Controller
             'course' => $data['course'],
             'classNumber' => $class,
             'material' => $data['material'],
+            'isCompleted' => auth()->user()->student?->unitProgress()
+                ->where('unit_id', $material)
+                ->where('is_completed', true)
+                ->exists() ?? false,
+            'completedUnitIds' => auth()->user()->student?->unitProgress()
+                ->where('is_completed', true)
+                ->pluck('unit_id')
+                ->all() ?? [],
         ]);
     }
 }

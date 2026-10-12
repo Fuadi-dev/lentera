@@ -4,10 +4,16 @@ import CardContent from '@/Components/ui/card/CardContent.vue';
 import CardDescription from '@/Components/ui/card/CardDescription.vue';
 import CardHeader from '@/Components/ui/card/CardHeader.vue';
 import CardTitle from '@/Components/ui/card/CardTitle.vue';
+import CardFooter from '@/Components/ui/card/CardFooter.vue';
 import VideoSummary from '@/Components/Course/VideoSummary.vue';
+import NextMaterialButton from '@/Components/Course/NextMaterialButton.vue';
+import MarkUnitDoneButton from '@/Components/Course/MarkUnitDoneButton.vue';
 
 const props = defineProps({
     material: { type: Object, required: true },
+    nextUnitHref: { type: String, default: null },
+    nextUnitTitle: { type: String, default: '' },
+    completed: { type: Boolean, default: false },
 });
 
 function youtubeEmbedUrl() {
@@ -69,5 +75,9 @@ function youtubeEmbedUrl() {
             :title="material.summaryTitle ?? 'Rangkuman Video'"
             :source="material.source"
         />
+        <CardFooter class="justify-between">
+            <MarkUnitDoneButton :unit-id="material.id" :completed="completed" />
+            <NextMaterialButton v-if="nextUnitHref" :href="nextUnitHref" :title="nextUnitTitle" />
+        </CardFooter>
     </Card>
 </template>

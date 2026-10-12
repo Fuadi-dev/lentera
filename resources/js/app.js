@@ -21,7 +21,7 @@ createInertiaApp({
                 return () =>
                     h('div', [
                         h(App, props),
-                        page.component !== 'Welcome' ? h(AccessibilitySettings) : null,
+                        page.component === 'Course/Material' ? h(AccessibilitySettings) : null,
                     ]);
             },
         })

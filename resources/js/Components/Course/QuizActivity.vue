@@ -1,16 +1,16 @@
 <script setup>
 import { computed, onBeforeUnmount, ref } from 'vue';
+import { router } from '@inertiajs/vue3';
 import confetti from 'canvas-confetti';
 import {
-    Check,
     CircleHelp,
     Flame,
     Headphones,
-    LockKeyhole,
     RotateCcw,
-    Star,
-    X,
 } from 'lucide-vue-next';
+import { PhCheck, PhX } from '@phosphor-icons/vue';
+import NextMaterialButton from '@/Components/Course/NextMaterialButton.vue';
+import MarkUnitDoneButton from '@/Components/Course/MarkUnitDoneButton.vue';
 
 const props = defineProps({
     unit: {
@@ -21,13 +21,23 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    nextUnitHref: {
+        type: String,
+        default: null,
+    },
+    nextUnitTitle: {
+        type: String,
+        default: '',
+    },
+    completed: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const emit = defineEmits(['completed']);
 
 const currentQuestionIndex = ref(0);
-const currentScore = ref(0);
-const displayedScore = ref(0);
 const streak = ref(0);
 const selectedOption = ref(null);
 const textAnswer = ref('');
@@ -35,22 +45,10 @@ const answerState = ref(null);
 const feedback = ref('');
 const completed = ref(false);
 const confettiTriggered = ref(false);
-let scoreAnimationFrame = null;
 
 const questions = computed(() => props.unit.questions ?? []);
 const currentQuestion = computed(() => questions.value[currentQuestionIndex.value]);
 const passingScore = computed(() => props.unit.passingScore ?? 0);
-const progressUnits = computed(() =>
-    props.chapterUnits.length
-        ? props.chapterUnits
-        : [{ id: props.unit.id, title: props.unit.title, type: props.unit.type }]
-);
-const progressIndex = computed(() =>
-    progressUnits.value.findIndex((item) => item.id === props.unit.id)
-);
-const progressPosition = computed(() =>
-    progressIndex.value >= 0 ? progressIndex.value : 0
-);
 const isLastQuestion = computed(
     () => currentQuestionIndex.value === questions.value.length - 1
 );
@@ -61,25 +59,8 @@ function optionCount(option) {
     return Number.isInteger(value) && value > 0 ? Math.min(value, 20) : 0;
 }
 
-function animateScore(target) {
-    cancelAnimationFrame(scoreAnimationFrame);
-    const start = displayedScore.value;
-    const startedAt = performance.now();
-
-    function update(now) {
-        const progress = Math.min((now - startedAt) / 500, 1);
-        displayedScore.value = Math.round(start + (target - start) * progress);
-
-        if (progress < 1) {
-            scoreAnimationFrame = requestAnimationFrame(update);
-        }
-    }
-
-    scoreAnimationFrame = requestAnimationFrame(update);
-}
-
 function triggerConfetti() {
-    if (confettiTriggered.value || currentScore.value < passingScore.value) {
+    if (confettiTriggered.value) {
         return;
     }
 
@@ -100,10 +81,17 @@ function announceCompletion() {
     completed.value = true;
     triggerConfetti();
     emit('completed', {
-        score: currentScore.value,
-        passingScore: passingScore.value,
-        passed: currentScore.value >= passingScore.value,
+        passed: true,
     });
+
+    // Auto-mark unit as done when quiz is completed
+    if (!props.completed) {
+        router.post(
+            route('progress.units.complete', { unit: props.unit.id }),
+            {},
+            { preserveScroll: true }
+        );
+    }
 }
 
 function chooseOption(option) {
@@ -122,9 +110,7 @@ function chooseOption(option) {
     if (isCorrect) {
         answerState.value = 'correct';
         streak.value += 1;
-        currentScore.value += currentQuestion.value.points ?? 0;
-        animateScore(currentScore.value);
-        feedback.value = `Benar! Kamu mendapat ${currentQuestion.value.points ?? 0} poin.`;
+        feedback.value = 'Benar!';
         triggerConfetti();
     } else {
         answerState.value = 'incorrect';
@@ -150,9 +136,7 @@ function submitTextAnswer() {
     if (isCorrect) {
         answerState.value = 'correct';
         streak.value += 1;
-        currentScore.value += currentQuestion.value.points ?? 0;
-        animateScore(currentScore.value);
-        feedback.value = `Benar! Kamu mendapat ${currentQuestion.value.points ?? 0} poin.`;
+        feedback.value = 'Benar!';
         triggerConfetti();
     } else {
         answerState.value = 'incorrect';
@@ -194,7 +178,6 @@ function speakQuestion() {
 }
 
 onBeforeUnmount(() => {
-    cancelAnimationFrame(scoreAnimationFrame);
     window.speechSynthesis?.cancel();
 });
 </script>
@@ -211,43 +194,7 @@ onBeforeUnmount(() => {
                     {{ unit.title }}
                 </h2>
             </div>
-            <div
-                class="flex items-center gap-2 rounded-full bg-amber-100 px-4 py-2 font-bold text-amber-900"
-                aria-label="Total poin"
-            >
-                <Star :size="18" fill="currentColor" aria-hidden="true" />
-                <span>{{ displayedScore }} poin</span>
-            </div>
         </header>
-
-        <div
-            class="flex items-center gap-2 overflow-x-auto pb-2"
-            aria-label="Progress aktivitas dalam chapter"
-        >
-            <template v-for="(progressUnit, index) in progressUnits" :key="progressUnit.id">
-                <div
-                    class="flex size-9 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold"
-                    :class="
-                        index < progressPosition
-                            ? 'border-green-600 bg-green-600 text-white'
-                            : index === progressPosition
-                              ? 'animate-pulse border-primary bg-primary text-primary-foreground'
-                              : 'border-border bg-muted text-muted-foreground'
-                    "
-                    :aria-label="`${progressUnit.title}, ${index === progressPosition ? 'sedang dikerjakan' : index < progressPosition ? 'selesai' : 'terkunci'}`"
-                >
-                    <Check v-if="index < progressPosition" :size="16" aria-hidden="true" />
-                    <LockKeyhole v-else-if="index > progressPosition" :size="14" aria-hidden="true" />
-                    <span v-else>{{ index + 1 }}</span>
-                </div>
-                <div
-                    v-if="index < progressUnits.length - 1"
-                    class="h-0.5 min-w-6 flex-1"
-                    :class="index < progressPosition ? 'bg-green-600' : 'bg-border'"
-                    aria-hidden="true"
-                ></div>
-            </template>
-        </div>
 
         <div v-if="streak > 1" class="inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1 text-sm font-semibold text-orange-900">
             <Flame :size="17" fill="currentColor" aria-hidden="true" />
@@ -255,10 +202,7 @@ onBeforeUnmount(() => {
         </div>
 
         <div v-if="currentQuestion" class="space-y-5">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-                <p class="text-sm text-muted-foreground">
-                    Pertanyaan {{ currentQuestionIndex + 1 }} dari {{ questions.length }}
-                </p>
+            <div class="flex flex-wrap items-center justify-end gap-3">
                 <button
                     type="button"
                     class="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-semibold hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
@@ -290,15 +234,17 @@ onBeforeUnmount(() => {
                 >
                     <span class="flex items-start justify-between gap-3">
                         <span class="text-4xl font-black">{{ option.text }}</span>
-                        <Check
+                        <PhCheck
                             v-if="selectedOption === option.id && answerState === 'correct'"
                             class="animate-[scale-in_200ms_ease-out]"
                             :size="28"
+                            weight="bold"
                             aria-label="Jawaban benar"
                         />
-                        <X
+                        <PhX
                             v-else-if="selectedOption === option.id && answerState === 'incorrect'"
                             :size="28"
+                            weight="bold"
                             aria-label="Jawaban belum tepat"
                         />
                     </span>
@@ -309,6 +255,39 @@ onBeforeUnmount(() => {
                             class="size-4 rounded-sm bg-primary/70"
                         ></span>
                     </span>
+                </button>
+            </div>
+
+            <div v-if="currentQuestion.type === 'true_false'" class="grid gap-3 sm:grid-cols-2">
+                <button
+                    v-for="val in [true, false]"
+                    :key="val"
+                    type="button"
+                    class="relative min-h-40 rounded-xl border-2 p-4 text-center transition flex flex-col items-center justify-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    :class="{
+                        'border-green-600 bg-green-50 text-green-950': selectedOption === val && answerState === 'correct',
+                        'animate-[shake_250ms_ease-in-out] border-amber-500 bg-amber-50 text-amber-950': selectedOption === val && answerState === 'incorrect',
+                        'border-border bg-background hover:-translate-y-1 hover:border-primary hover:shadow-md': selectedOption !== val,
+                    }"
+                    :aria-label="`Jawaban ${val ? 'Benar' : 'Salah'}`"
+                    @click="chooseOption({ id: val })"
+                >
+                    <span class="text-4xl font-black">{{ val ? 'Benar' : 'Salah' }}</span>
+                    <div class="h-8">
+                        <PhCheck
+                            v-if="selectedOption === val && answerState === 'correct'"
+                            class="animate-[scale-in_200ms_ease-out]"
+                            :size="28"
+                            weight="bold"
+                            aria-label="Jawaban benar"
+                        />
+                        <PhX
+                            v-else-if="selectedOption === val && answerState === 'incorrect'"
+                            :size="28"
+                            weight="bold"
+                            aria-label="Jawaban belum tepat"
+                        />
+                    </div>
                 </button>
             </div>
 
@@ -349,8 +328,8 @@ onBeforeUnmount(() => {
                 aria-live="polite"
             >
                 <p v-if="feedback" class="flex items-start gap-2">
-                    <Check v-if="answerState === 'correct'" :size="18" class="mt-0.5 shrink-0" aria-hidden="true" />
-                    <X v-else-if="answerState === 'incorrect'" :size="18" class="mt-0.5 shrink-0" aria-hidden="true" />
+                    <PhCheck v-if="answerState === 'correct'" :size="18" weight="bold" class="mt-0.5 shrink-0" aria-hidden="true" />
+                    <PhX v-else-if="answerState === 'incorrect'" :size="18" weight="bold" class="mt-0.5 shrink-0" aria-hidden="true" />
                     <span>{{ feedback }}</span>
                 </p>
             </div>
@@ -378,6 +357,11 @@ onBeforeUnmount(() => {
 
         <div v-else class="rounded-lg border border-green-600 bg-green-50 p-4 text-green-950" aria-live="polite">
             Aktivitas ini belum memiliki pertanyaan.
+        </div>
+
+        <div class="flex justify-between">
+            <MarkUnitDoneButton :unit-id="unit.id" :completed="props.completed || completed" />
+            <NextMaterialButton v-if="nextUnitHref" :href="nextUnitHref" :title="nextUnitTitle" />
         </div>
     </section>
 </template>

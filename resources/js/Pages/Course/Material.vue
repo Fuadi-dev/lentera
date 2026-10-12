@@ -6,6 +6,7 @@ import QuestionMaterial from '@/Components/Course/QuestionMaterial.vue';
 import QuizActivity from '@/Components/Course/QuizActivity.vue';
 import TextMaterial from '@/Components/Course/TextMaterial.vue';
 import VideoMaterial from '@/Components/Course/VideoMaterial.vue';
+import NextMaterialButton from '@/Components/Course/NextMaterialButton.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { PhArrowLeft } from '@phosphor-icons/vue';
 import { SidebarProvider } from '@/Components/ui/sidebar';
@@ -14,6 +15,8 @@ const props = defineProps({
     course: { type: Object, required: true },
     classNumber: { type: [Number, String], required: true },
     material: { type: Object, required: true },
+    isCompleted: { type: Boolean, default: false },
+    completedUnitIds: { type: Array, default: () => [] },
 });
 
 const sidebarOpen = ref(true);
@@ -32,10 +35,43 @@ const chapterUnits = computed(() => {
     );
 });
 
+const navigationUnits = computed(() =>
+    (props.course.classes ?? []).flatMap((courseClass) =>
+        (courseClass.levels ?? []).flatMap((level) =>
+            (level.chapters ?? []).flatMap((chapter) =>
+                (chapter.units ?? []).map((unit) => ({
+                    classNumber: courseClass.number,
+                    chapterId: chapter.id,
+                    unit,
+                }))
+            )
+        )
+    )
+);
+
+const nextUnit = computed(() => {
+    const currentIndex = navigationUnits.value.findIndex(
+        ({ unit }) => unit.id === props.material.id
+    );
+
+    return currentIndex >= 0 ? navigationUnits.value[currentIndex + 1] : null;
+});
+
+const nextUnitHref = computed(() =>
+    nextUnit.value
+        ? route('courses.material', {
+              course: props.course.id,
+              class: nextUnit.value.classNumber,
+              material: nextUnit.value.unit.id,
+          })
+        : null
+);
 
 function handleQuizCompleted(result) {
     quizCompleted.value = result;
 }
+
+console.log("kuis komplete su", props.isCompleted)
 </script>
 
 <template>
@@ -71,6 +107,7 @@ function handleQuizCompleted(result) {
                             :course="course"
                             :class-number="classNumber"
                             :material="material"
+                            :completed-unit-ids="completedUnitIds"
                         />
 
                         <main class="flex-1 w-full min-w-0">
@@ -80,37 +117,39 @@ function handleQuizCompleted(result) {
                                     :course="course"
                                     :class-number="classNumber"
                                     :material="material"
+                                    :next-unit-href="nextUnitHref"
+                                    :next-unit-title="nextUnit?.unit.title"
+                                    :completed="isCompleted"
                                 />
                                 <VideoMaterial
                                     v-else-if="material.type === 'video'"
                                     :material="material"
+                                    :next-unit-href="nextUnitHref"
+                                    :next-unit-title="nextUnit?.unit.title"
+                                    :completed="isCompleted"
                                 />
                                 <QuestionMaterial
                                     v-else-if="material.type === 'question'"
                                     :material="material"
+                                    :next-unit-href="nextUnitHref"
+                                    :next-unit-title="nextUnit?.unit.title"
+                                    :completed="isCompleted"
                                 />
                                 <template v-else-if="material.type === 'quiz'">
                                     <QuizActivity
                                         :unit="material"
                                         :chapter-units="chapterUnits"
+                                        :next-unit-href="nextUnitHref"
+                                        :next-unit-title="nextUnit?.unit.title"
+                                        :completed="isCompleted"
                                         @completed="handleQuizCompleted"
                                     />
                                     <p
                                         v-if="quizCompleted"
-                                        class="mt-4 text-sm font-semibold"
-                                        :class="
-                                            quizCompleted.passed
-                                                ? 'text-green-600'
-                                                : 'text-muted-foreground'
-                                        "
+                                        class="mt-4 text-sm font-semibold text-green-600"
                                         aria-live="polite"
                                     >
-                                        {{
-                                            quizCompleted.passed
-                                                ? 'Quiz selesai dan lulus.'
-                                                : 'Quiz selesai.'
-                                        }}
-                                        Skor: {{ quizCompleted.score }}.
+                                        Quiz selesai.
                                     </p>
                                 </template>
                             </div>
