@@ -2,12 +2,15 @@
 
 namespace App\Services;
 
-use App\Models\User;
-use App\Models\Otp;
+use App\Jobs\SendWelcomeEmailJob;
 use App\Mail\OtpMail;
+use App\Models\Otp;
+use App\Models\Parents;
+use App\Models\Student;
+use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Str;
 
 class AuthService
 {
@@ -25,6 +28,7 @@ class AuthService
                 'google_token' => $googleUser->token,
                 'google_refresh_token' => $googleUser->refreshToken,
             ]);
+
             return $user;
         }
 
@@ -44,10 +48,20 @@ class AuthService
             'google_refresh_token' => $googleData['refresh_token'],
             'role' => $role,
             'email_verified_at' => now(),
-            'password' => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(24)),
+            'password' => Hash::make(Str::random(24)),
         ]);
 
-        \App\Jobs\SendWelcomeEmailJob::dispatch($user);
+        if ($role === 'child') {
+            Student::create(['user_id' => $user->id, 'name' => $user->name]);
+        } elseif ($role === 'parent') {
+            Parents::create([
+                'user_id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+            ]);
+        }
+
+        SendWelcomeEmailJob::dispatch($user);
 
         return $user;
     }
@@ -63,7 +77,7 @@ class AuthService
             ['email' => $data['email']],
             [
                 'otp' => $otpCode,
-                'expires_at' => now()->addMinutes(15)
+                'expires_at' => now()->addMinutes(15),
             ]
         );
 
@@ -87,13 +101,13 @@ class AuthService
         $password = session('registration_password');
         $role = session('registration_role');
 
-        if (!$email || !$name || !$password || !$role) {
+        if (! $email || ! $name || ! $password || ! $role) {
             throw new \InvalidArgumentException('Session expired. Please register again.');
         }
 
         $otpRecord = Otp::where('email', $email)->first();
 
-        if (!$otpRecord || $otpRecord->otp !== $otpInput || $otpRecord->expires_at < now()) {
+        if (! $otpRecord || $otpRecord->otp !== $otpInput || $otpRecord->expires_at < now()) {
             throw new \Exception('Invalid or expired OTP.');
         }
 
@@ -105,10 +119,20 @@ class AuthService
             'email_verified_at' => now(),
         ]);
 
+        if ($role === 'child') {
+            Student::create(['user_id' => $user->id, 'name' => $user->name]);
+        } elseif ($role === 'parent') {
+            Parents::create([
+                'user_id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+            ]);
+        }
+
         $otpRecord->delete();
         session()->forget(['registration_email', 'registration_name', 'registration_password', 'registration_role']);
 
-        \App\Jobs\SendWelcomeEmailJob::dispatch($user);
+        SendWelcomeEmailJob::dispatch($user);
 
         return $user;
     }

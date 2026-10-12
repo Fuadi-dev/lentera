@@ -30,25 +30,21 @@ const selectedClass = computed(() =>
 );
 
 const learningPath = computed(() => {
-    if (selectedClass.value?.section) {
-        return selectedClass.value.section.flatMap((section) =>
-            section.unit.map((material) => ({
-                ...material,
-                sectionTitle: section.title,
-            }))
-        );
-    }
-
-    return (
-        selectedClass.value?.levels?.flatMap((level) =>
-            level.chapters?.flatMap((chapter) =>
-                chapter.units.map((material) => ({
-                    ...material,
-                    sectionTitle: chapter.title,
-                }))
-            )
-        ) ?? []
-    );
+    const levels = selectedClass.value?.levels ?? [];
+    
+    return levels.map((level) => {
+        const firstChapter = level.chapters?.[0];
+        const firstUnit = firstChapter?.units?.[0];
+        
+        return {
+            id: level.id,
+            title: level.title,
+            description: level.description,
+            type: 'level',
+            number: level.number,
+            firstUnitId: firstUnit?.id,
+        };
+    });
 });
 
 const flowContainer = ref(null);
@@ -185,11 +181,11 @@ function materialIcon(type) {
 }
 
 function openMaterial({ event, node }) {
-    if (node.data.index > 0) {
+    if (event.target instanceof Element && event.target.closest('a')) {
         return;
     }
 
-    if (event.target instanceof Element && event.target.closest('a')) {
+    if (!node.data.material.firstUnitId) {
         return;
     }
 
@@ -197,7 +193,7 @@ function openMaterial({ event, node }) {
         route('courses.material', {
             course: props.course.id,
             class: props.classNumber,
-            material: node.data.material.id,
+            material: node.data.material.firstUnitId,
         })
     );
 }
@@ -275,7 +271,7 @@ function openMaterial({ event, node }) {
                             </h3>
                         </div>
                         <span class="text-sm text-muted-foreground">
-                            {{ learningPath.length }} materi
+                            {{ learningPath.length }} level
                         </span>
                     </div>
 
@@ -303,28 +299,28 @@ function openMaterial({ event, node }) {
                         >
                             <template #node-learningMaterial="{ data }">
                                 <component
-                                    :is="data.index === 0 ? Link : 'div'"
+                                    :is="data.material.firstUnitId ? Link : 'div'"
                                     :href="
-                                        data.index === 0
+                                        data.material.firstUnitId
                                             ? route('courses.material', {
                                                   course: course.id,
                                                   class: classNumber,
-                                                  material: data.material.id,
+                                                  material: data.material.firstUnitId,
                                               })
                                             : undefined
                                     "
                                     :class="[
                                         'block learning-node',
-                                        data.index === 0
+                                        data.material.firstUnitId
                                             ? 'cursor-pointer transition-transform hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2'
                                             : 'learning-node--locked',
                                     ]"
                                     :aria-label="
-                                        data.index === 0
-                                            ? `Buka materi ${data.material.title}`
-                                            : `${data.material.title} terkunci`
+                                        data.material.firstUnitId
+                                            ? `Buka level ${data.material.title}`
+                                            : `${data.material.title} belum tersedia`
                                     "
-                                    :aria-disabled="data.index > 0 ? 'true' : undefined"
+                                    :aria-disabled="!data.material.firstUnitId ? 'true' : undefined"
                                 >
                                     <Handle
                                         type="target"

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\Student;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,10 +19,37 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
+        $pairingCode = null;
+        if ($request->user()->role === 'child') {
+            $student = $request->user()->student;
+            if ($student && empty($student->pairing_code)) {
+                $student->pairing_code = Student::generateUniquePairingCode();
+                $student->save();
+            }
+            $pairingCode = $student?->pairing_code;
+        }
+
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
+            'pairingCode' => $pairingCode,
         ]);
+    }
+
+    /**
+     * Regenerate pairing code for student.
+     */
+    public function regeneratePairingCode(Request $request): RedirectResponse
+    {
+        abort_unless($request->user()->role === 'child', 403);
+
+        $student = $request->user()->student;
+        if ($student) {
+            $student->pairing_code = Student::generateUniquePairingCode();
+            $student->save();
+        }
+
+        return back()->with('status', 'pairing-code-updated');
     }
 
     /**

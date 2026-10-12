@@ -2,17 +2,17 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\Subject;
-use App\Models\Classes;
-use App\Models\Level;
 use App\Models\Chapter;
-use App\Models\Unit;
+use App\Models\Classes;
 use App\Models\FinalTest;
+use App\Models\Level;
+use App\Models\Parents;
 use App\Models\Question;
 use App\Models\QuestionOption;
-use App\Models\Parents;
 use App\Models\Student;
+use App\Models\Subject;
+use App\Models\Unit;
+use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -23,7 +23,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'budi@example.com'],
             ['name' => 'Budi Santoso']
         );
-        
+
         Student::firstOrCreate(
             ['name' => 'Andi'],
             ['parent_id' => $parent->id]
@@ -31,16 +31,18 @@ class DatabaseSeeder extends Seeder
 
         // 2. Baca file JSON
         $jsonPath = base_path('data/courses.json');
-        if (!file_exists($jsonPath)) {
-            $this->command->warn("File courses.json tidak ditemukan!");
+        if (! file_exists($jsonPath)) {
+            $this->command->warn('File courses.json tidak ditemukan!');
+
             return;
         }
 
         $json = file_get_contents($jsonPath);
         $subjects = json_decode($json, true);
 
-        if (!$subjects) {
-            $this->command->warn("Gagal membaca atau mem-parsing courses.json!");
+        if (! $subjects) {
+            $this->command->warn('Gagal membaca atau mem-parsing courses.json!');
+
             return;
         }
 
@@ -106,41 +108,70 @@ class DatabaseSeeder extends Seeder
                                                 ]
                                             );
 
-                                            if (isset($unitData['questions'])) {
-                                                foreach ($unitData['questions'] as $qData) {
-                                                    // Map answer ids if options exist to make them globally unique
-                                                    $rawAnswer = is_array($qData['answer']) ? $qData['answer'] : [$qData['answer']];
-                                                    $mappedAnswer = $rawAnswer;
+                                            $unitQuestions = $unitData['questions'] ?? [];
+                                            if ($unitData['type'] === 'question' && ! $unitQuestions) {
+                                                $unitQuestions = [$unitData];
+                                            }
 
-                                                    if (isset($qData['options'])) {
-                                                        $mappedAnswer = [];
-                                                        foreach ($rawAnswer as $ans) {
-                                                            $mappedAnswer[] = $qData['id'] . '-' . $ans;
-                                                        }
+                                            foreach ($unitQuestions as $qData) {
+                                                if ($unitData['type'] === 'question' && ! isset($qData['id'])) {
+                                                    $qData['id'] = 'q-'.$unitData['id'].'-001';
+                                                }
+
+                                                if ($unitData['type'] === 'question') {
+                                                    $qData['id'] = 'q-'.$unitData['id'].'-001';
+                                                    $qData['type'] = 'dropzone';
+                                                }
+
+                                                // Map answer ids if options exist to make them globally unique
+                                                $rawAnswer = $qData['answer'] ?? [];
+                                                $mappedAnswer = $rawAnswer;
+
+                                                if (isset($qData['options'])) {
+                                                    $rawAnswer = is_array($rawAnswer) ? $rawAnswer : [$rawAnswer];
+                                                    $mappedAnswer = [];
+                                                    foreach ($rawAnswer as $ans) {
+                                                        $mappedAnswer[] = $qData['id'].'-'.$ans;
                                                     }
+                                                }
 
-                                                    $question = Question::updateOrCreate(
-                                                        ['id' => $qData['id']],
-                                                        [
-                                                            'unit_id' => $unit->id,
-                                                            'type' => $qData['type'],
-                                                            'question' => $qData['question'],
-                                                            'answer' => $mappedAnswer,
-                                                            'explanation' => $qData['explanation'] ?? null,
-                                                            'points' => $qData['points'] ?? 10,
-                                                        ]
-                                                    );
+                                                $question = Question::updateOrCreate(
+                                                    ['id' => $qData['id']],
+                                                    [
+                                                        'unit_id' => $unit->id,
+                                                        'type' => $qData['type'],
+                                                        'question' => $qData['question'],
+                                                        'answer' => $mappedAnswer,
+                                                        'explanation' => $qData['explanation'] ?? null,
+                                                        'points' => $qData['points'] ?? 10,
+                                                    ]
+                                                );
 
-                                                    if (isset($qData['options'])) {
-                                                        foreach ($qData['options'] as $optData) {
-                                                            QuestionOption::updateOrCreate(
-                                                                ['id' => $qData['id'] . '-' . $optData['id']],
-                                                                [
-                                                                    'question_id' => $question->id,
-                                                                    'text' => $optData['text'],
-                                                                ]
-                                                            );
-                                                        }
+                                                if (isset($qData['options']) || isset($qData['items'])) {
+                                                    QuestionOption::where('question_id', $question->id)->delete();
+                                                }
+
+                                                if (isset($qData['options'])) {
+                                                    foreach ($qData['options'] as $optData) {
+                                                        QuestionOption::updateOrCreate(
+                                                            ['id' => $qData['id'].'-'.$optData['id']],
+                                                            [
+                                                                'question_id' => $question->id,
+                                                                'text' => $optData['text'],
+                                                            ]
+                                                        );
+                                                    }
+                                                }
+
+                                                if (isset($qData['items'])) {
+                                                    foreach ($qData['items'] as $itemData) {
+                                                        QuestionOption::updateOrCreate(
+                                                            ['id' => $qData['id'].'-'.$itemData['id']],
+                                                            [
+                                                                'question_id' => $question->id,
+                                                                'text' => $itemData['label'] ?? $itemData['text'] ?? '',
+                                                            ]
+                                                        );
                                                     }
                                                 }
                                             }
@@ -166,6 +197,6 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-        $this->command->info("Data berhasil di-seed dari courses.json!");
+        $this->command->info('Data berhasil di-seed dari courses.json!');
     }
 }

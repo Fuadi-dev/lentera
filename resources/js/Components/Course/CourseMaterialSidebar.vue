@@ -1,8 +1,10 @@
 <script setup>
+import { computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import {
     PhBookOpen,
     PhCaretRight,
+    PhCheckCircle,
     PhGraduationCap,
     PhListChecks,
     PhLock,
@@ -27,48 +29,55 @@ const props = defineProps({
     course: { type: Object, required: true },
     classNumber: { type: [Number, String], required: true },
     material: { type: Object, required: true },
+    completedUnitIds: { type: Array, default: () => [] },
 });
 
-const courseClasses = () => props.course.classes ?? [];
+function isUnitCompleted(unitId) {
+    return props.completedUnitIds.includes(unitId);
+}
 
-function classUnits(courseClass) {
-    if (courseClass.section) {
-        return courseClass.section.flatMap((section) => section.unit ?? []);
+// Dapatkan kelas saat ini berdasarkan classNumber
+const currentClass = computed(() => {
+    return props.course.classes?.find(c => Number(c.number) === Number(props.classNumber)) || {};
+});
+
+// Cari level yang menaungi material saat ini, lalu kembalikan chapters dari level tersebut saja
+const chapters = computed(() => {
+    if (!currentClass.value.levels) return [];
+    
+    // Temukan level mana yang memiliki material ini
+    for (const level of currentClass.value.levels) {
+        if (!level.chapters) continue;
+        for (const chapter of level.chapters) {
+            if (!chapter.units) continue;
+            if (chapter.units.some(u => String(u.id) === String(props.material.id))) {
+                return level.chapters; // Hanya return chapter dari level ini
+            }
+        }
     }
+    
+    // Fallback: kembalikan level pertama jika tidak ketemu (seharusnya tidak terjadi)
+    return currentClass.value.levels[0]?.chapters || [];
+});
 
-    return (courseClass.levels ?? []).flatMap((level) =>
-        (level.chapters ?? []).flatMap((chapter) => chapter.units ?? [])
-    );
+// Mengecek apakah suatu chapter berisi materi (unit) yang sedang dibuka
+function isChapterActive(chapter) {
+    if (!chapter.units) return false;
+    return chapter.units.some(u => u.id === props.material.id);
 }
 
-function classFinalTest(courseClass) {
-    if (courseClass.finalTest) {
-        return courseClass.finalTest;
-    }
-
-    return courseClass.levels?.[0]?.chapters?.[0]?.finalTest;
-}
-
-function isClassUnlocked(courseClass) {
-    return courseClass.number <= Number(props.classNumber);
-}
-
+// Menentukan ikon berdasarkan tipe unit
 function unitIcon(type) {
-    if (type === 'video') {
-        return PhVideoCamera;
-    }
-
-    if (type === 'quiz') {
-        return PhListChecks;
-    }
-
+    if (type === 'video') return PhVideoCamera;
+    if (type === 'quiz') return PhListChecks;
     return PhBookOpen;
 }
 
-function unitHref(courseClass, unit) {
+// Membuat URL unit
+function unitHref(unit) {
     return route('courses.material', {
         course: props.course.id,
-        class: courseClass.number,
+        class: props.classNumber,
         material: unit.id,
     });
 }
@@ -93,7 +102,7 @@ function unitHref(courseClass, unit) {
                     class="grid flex-1 text-sm leading-tight text-left group-data-[collapsible=icon]:hidden"
                 >
                     <p class="min-w-0 text-xs truncate text-muted-foreground">{{ course.title }}</p>
-                    <p class="min-w-0 font-semibold truncate">Chapter {{ classNumber }}</p>
+                    <p class="min-w-0 font-semibold truncate">Kelas {{ classNumber }}</p>
                 </div>
             </SidebarMenuButton>
         </SidebarHeader>
@@ -103,23 +112,23 @@ function unitHref(courseClass, unit) {
                 <SidebarGroupContent>
                     <SidebarMenu>
                         <Collapsible
-                            v-for="courseClass in courseClasses()"
-                            :key="courseClass.id"
+                            v-for="chapter in chapters"
+                            :key="chapter.id"
                             as-child
-                            :default-open="Number(classNumber) === courseClass.number"
+                            :default-open="isChapterActive(chapter)"
                             class="group/collapsible"
                         >
                             <SidebarMenuItem>
                                 <CollapsibleTrigger as-child>
                                     <SidebarMenuButton
-                                        :is-active="Number(classNumber) === courseClass.number"
-                                        :aria-label="`Buka materi Chapter ${courseClass.number}`"
-                                        :tooltip="`Chapter ${courseClass.number}`"
+                                        :is-active="isChapterActive(chapter)"
+                                        :aria-label="`Buka materi Chapter ${chapter.number}`"
+                                        :tooltip="`Chapter ${chapter.number}: ${chapter.title}`"
                                     >
                                         <span
                                             class="min-w-0 truncate group-data-[collapsible=icon]:hidden"
                                         >
-                                            Chapter {{ courseClass.number }}
+                                            Chapter {{ chapter.number }}
                                         </span>
                                         <PhCaretRight
                                             class="ml-auto size-4 transition-transform group-data-[collapsible=icon]:hidden group-data-[state=open]/collapsible:rotate-90"
@@ -131,44 +140,40 @@ function unitHref(courseClass, unit) {
                                 <CollapsibleContent>
                                     <SidebarMenuSub>
                                         <SidebarMenuSubItem
-                                            v-for="unit in classUnits(courseClass)"
+                                            v-for="unit in (chapter.units || [])"
                                             :key="unit.id"
                                         >
                                             <SidebarMenuSubButton
-                                                v-if="isClassUnlocked(courseClass)"
                                                 :as-child="true"
                                                 :is-active="unit.id === material.id"
                                             >
-                                                <Link :href="unitHref(courseClass, unit)">
+                                                <Link :href="unitHref(unit)">
+                                                    <PhCheckCircle
+                                                        v-if="isUnitCompleted(unit.id)"
+                                                        class="size-4 text-green-600"
+                                                        weight="fill"
+                                                        aria-label="Selesai"
+                                                    />
                                                     <component
+                                                        v-else
                                                         :is="unitIcon(unit.type)"
                                                         class="size-4"
                                                         aria-hidden="true"
                                                     />
                                                     <span
                                                         class="min-w-0 truncate group-data-[collapsible=icon]:hidden"
+                                                        :class="isUnitCompleted(unit.id) ? 'text-green-600' : ''"
                                                     >
                                                         {{ unit.title }}
                                                     </span>
                                                 </Link>
                                             </SidebarMenuSubButton>
-                                            <SidebarMenuSubButton
-                                                v-else
-                                                disabled
-                                                :aria-label="`${unit.title} terkunci`"
-                                            >
-                                                <PhLock class="size-4" aria-hidden="true" />
-                                                <span
-                                                    class="min-w-0 truncate group-data-[collapsible=icon]:hidden"
-                                                >
-                                                    {{ unit.title }}
-                                                </span>
-                                            </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
-                                        <SidebarMenuSubItem v-if="classFinalTest(courseClass)">
+                                        
+                                        <SidebarMenuSubItem v-if="chapter.finalTest">
                                             <SidebarMenuSubButton
                                                 disabled
-                                                :aria-label="`${classFinalTest(courseClass).title} terkunci`"
+                                                :aria-label="`${chapter.finalTest.title} terkunci`"
                                             >
                                                 <PhGraduationCap
                                                     class="size-4"
@@ -177,7 +182,7 @@ function unitHref(courseClass, unit) {
                                                 <span
                                                     class="min-w-0 truncate group-data-[collapsible=icon]:hidden"
                                                 >
-                                                    {{ classFinalTest(courseClass).title }}
+                                                    {{ chapter.finalTest.title }}
                                                 </span>
                                                 <PhLock class="ml-auto size-4" aria-hidden="true" />
                                             </SidebarMenuSubButton>
