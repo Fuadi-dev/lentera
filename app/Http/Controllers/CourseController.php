@@ -38,6 +38,13 @@ class CourseController extends Controller
     {
         $data = $this->courseService->getMaterial($course, $class, $material);
 
+        if ($data['locked'] ?? false) {
+            return to_route('courses.learning-path', [
+                'course' => $course,
+                'class' => $class,
+            ]);
+        }
+
         return Inertia::render('Course/Material', [
             'course' => $data['course'],
             'classNumber' => $class,
