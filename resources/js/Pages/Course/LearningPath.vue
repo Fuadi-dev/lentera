@@ -31,11 +31,11 @@ const selectedClass = computed(() =>
 
 const learningPath = computed(() => {
     const levels = selectedClass.value?.levels ?? [];
-    
+
     return levels.map((level) => {
         const firstChapter = level.chapters?.[0];
         const firstUnit = firstChapter?.units?.[0];
-        
+
         return {
             id: level.id,
             title: level.title,
@@ -43,6 +43,7 @@ const learningPath = computed(() => {
             type: 'level',
             number: level.number,
             firstUnitId: firstUnit?.id,
+            isLocked: level.isLocked,
         };
     });
 });
@@ -185,7 +186,7 @@ function openMaterial({ event, node }) {
         return;
     }
 
-    if (!node.data.material.firstUnitId) {
+    if (!node.data.material.firstUnitId || node.data.material.isLocked) {
         return;
     }
 
@@ -299,9 +300,13 @@ function openMaterial({ event, node }) {
                         >
                             <template #node-learningMaterial="{ data }">
                                 <component
-                                    :is="data.material.firstUnitId ? Link : 'div'"
+                                    :is="
+                                        data.material.firstUnitId && !data.material.isLocked
+                                            ? Link
+                                            : 'div'
+                                    "
                                     :href="
-                                        data.material.firstUnitId
+                                        data.material.firstUnitId && !data.material.isLocked
                                             ? route('courses.material', {
                                                   course: course.id,
                                                   class: classNumber,
@@ -311,16 +316,20 @@ function openMaterial({ event, node }) {
                                     "
                                     :class="[
                                         'block learning-node',
-                                        data.material.firstUnitId
+                                        data.material.firstUnitId && !data.material.isLocked
                                             ? 'cursor-pointer transition-transform hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2'
                                             : 'learning-node--locked',
                                     ]"
                                     :aria-label="
-                                        data.material.firstUnitId
+                                        data.material.firstUnitId && !data.material.isLocked
                                             ? `Buka level ${data.material.title}`
                                             : `${data.material.title} belum tersedia`
                                     "
-                                    :aria-disabled="!data.material.firstUnitId ? 'true' : undefined"
+                                    :aria-disabled="
+                                        data.material.isLocked || !data.material.firstUnitId
+                                            ? 'true'
+                                            : undefined
+                                    "
                                 >
                                     <Handle
                                         type="target"
@@ -363,7 +372,7 @@ function openMaterial({ event, node }) {
                                             {{ data.index + 1 }}
                                         </span>
                                         <PhLock
-                                            v-if="data.index > 0"
+                                            v-if="data.material.isLocked"
                                             :size="18"
                                             class="mt-1 text-amber-600"
                                             aria-label="Terkunci"

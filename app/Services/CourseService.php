@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Student;
 use App\Models\Subject;
 use App\Models\Unit;
 
@@ -31,6 +32,8 @@ class CourseService
             abort(404, 'Class not found in this course.');
         }
 
+        $this->applyLevelAccess($course);
+
         return $course;
     }
 
@@ -42,12 +45,20 @@ class CourseService
         $course = $this->getLearningPath($courseId, $classNumber);
 
         // Find the specific unit in the DB
-        $material = Unit::with('questions.options')
+        $material = Unit::with(['questions.options', 'chapter.level'])
             ->where('id', $materialId)
             ->whereHas('chapter.level.classes', function ($q) use ($courseId, $classNumber) {
                 $q->where('subject_id', $courseId)
                     ->where('number', $classNumber);
             })->firstOrFail();
+
+        $materialLevel = $course->classes
+            ->flatMap(fn($courseClass) => $courseClass->levels)
+            ->firstWhere('id', $material->chapter->level_id);
+
+        if (! $materialLevel || $materialLevel->isLocked) {
+            return ['locked' => true];
+        }
 
         $question = $material->questions->first();
         $material->setAttribute('passingScore', $material->passing_score);
@@ -57,8 +68,8 @@ class CourseService
             $material->setAttribute('explanation', $question->explanation);
             $material->setAttribute(
                 'items',
-                $question->options->map(fn ($option) => [
-                    'id' => str($option->id)->after($question->id.'-')->toString(),
+                $question->options->map(fn($option) => [
+                    'id' => str($option->id)->after($question->id . '-')->toString(),
                     'label' => $option->text,
                 ])->values()->all()
             );
@@ -67,7 +78,7 @@ class CourseService
             $material->setAttribute(
                 'dropZones',
                 array_map(
-                    fn ($zoneId) => [
+                    fn($zoneId) => [
                         'id' => $zoneId,
                         'label' => match ($zoneId) {
                             'genap' => 'Bilangan genap',
@@ -84,5 +95,33 @@ class CourseService
             'course' => $course,
             'material' => $material,
         ];
+    }
+
+    private function applyLevelAccess($course): void
+    {
+        $student = auth()->user()?->student;
+
+        foreach ($course->classes as $courseClass) {
+            $previousLevelCompleted = true;
+
+            foreach ($courseClass->levels->sortBy('number')->values() as $level) {
+                $level->setAttribute('isLocked', ! $previousLevelCompleted);
+                $previousLevelCompleted = $this->isLevelCompleted($level, $student);
+            }
+        }
+    }
+
+    private function isLevelCompleted($level, ?Student $student): bool
+    {
+        $chapterIds = $level->chapters->pluck('id');
+
+        if ($chapterIds->isEmpty() || ! $student) {
+            return false;
+        }
+
+        return $student->chapterCompletions()
+            ->whereIn('chapter_id', $chapterIds)
+            ->where('is_passed', true)
+            ->count() === $chapterIds->count();
     }
 }
