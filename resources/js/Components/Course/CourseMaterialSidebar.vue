@@ -60,6 +60,12 @@ const chapters = computed(() => {
     return currentClass.value.levels[0]?.chapters || [];
 });
 
+const isCurrentLevelCompleted = computed(() => {
+    const allUnits = chapters.value.flatMap(c => c.units || []);
+    if (!allUnits.length) return false;
+    return allUnits.every(u => isUnitCompleted(u.id));
+});
+
 // Mengecek apakah suatu chapter berisi materi (unit) yang sedang dibuka
 function isChapterActive(chapter) {
     if (!chapter.units) return false;
@@ -106,6 +112,14 @@ function unitHref(unit) {
                 </div>
             </SidebarMenuButton>
         </SidebarHeader>
+
+        <div
+            v-if="isCurrentLevelCompleted"
+            class="mx-3 mt-3 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2 shadow-sm"
+        >
+            <PhCheckCircle :size="16" weight="fill" class="text-emerald-600 shrink-0" />
+            <span class="font-medium">Semua materi selesai! Level selanjutnya terbuka.</span>
+        </div>
 
         <SidebarContent>
             <SidebarGroup>

@@ -11,7 +11,9 @@ class StudentUnitProgress extends Model
     use HasFactory, HasUuids;
 
     protected $table = 'student_unit_progress';
+
     protected $guarded = [];
+
     protected $casts = [
         'is_completed' => 'boolean',
         'completed_at' => 'datetime',

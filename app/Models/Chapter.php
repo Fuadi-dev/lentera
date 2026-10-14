@@ -10,7 +10,9 @@ class Chapter extends Model
     use HasFactory;
 
     protected $keyType = 'string';
+
     public $incrementing = false;
+
     protected $guarded = [];
 
     public function level()

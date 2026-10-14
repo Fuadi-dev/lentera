@@ -2,8 +2,11 @@
 
 namespace App\Jobs;
 
+use App\Mail\WelcomeMail;
+use App\Models\User;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Mail;
 
 class SendWelcomeEmailJob implements ShouldQueue
 {
@@ -14,7 +17,7 @@ class SendWelcomeEmailJob implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct(\App\Models\User $user)
+    public function __construct(User $user)
     {
         $this->user = $user;
     }
@@ -24,6 +27,6 @@ class SendWelcomeEmailJob implements ShouldQueue
      */
     public function handle(): void
     {
-        \Illuminate\Support\Facades\Mail::to($this->user->email)->send(new \App\Mail\WelcomeMail($this->user));
+        Mail::to($this->user->email)->send(new WelcomeMail($this->user));
     }
 }

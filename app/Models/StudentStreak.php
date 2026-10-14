@@ -11,6 +11,7 @@ class StudentStreak extends Model
     use HasFactory, HasUuids;
 
     protected $guarded = [];
+
     protected $casts = [
         'last_activity_date' => 'date',
     ];

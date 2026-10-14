@@ -2,18 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
-use App\Models\User;
-use App\Models\Otp;
-use App\Mail\OtpMail;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
-use Laravel\Socialite\Facades\Socialite;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\VerifyOtpRequest;
+use App\Models\User;
 use App\Services\AuthService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
+use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
 {
@@ -24,7 +21,6 @@ class AuthController extends Controller
         $this->authService = $authService;
     }
 
-
     public function redirectToGoogle()
     {
         return Socialite::driver('google')->redirect();
@@ -34,11 +30,12 @@ class AuthController extends Controller
     {
         try {
             $googleUser = Socialite::driver('google')->user();
-            
+
             $existingUser = $this->authService->handleExistingGoogleUser($googleUser);
-            
+
             if ($existingUser) {
                 Auth::login($existingUser);
+
                 return redirect('/dashboard');
             }
 
@@ -50,29 +47,30 @@ class AuthController extends Controller
                     'id' => $googleUser->id,
                     'token' => $googleUser->token,
                     'refresh_token' => $googleUser->refreshToken,
-                ]
+                ],
             ]);
 
             return redirect()->route('auth.google.role.show');
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Google Login Error: ' . $e->getMessage());
-            return redirect('/login')->with('error', 'Google login failed: ' . $e->getMessage());
+            Log::error('Google Login Error: '.$e->getMessage());
+
+            return redirect('/login')->with('error', 'Google login failed: '.$e->getMessage());
         }
     }
 
     public function showGoogleRoleSelection()
     {
-        if (!session('pending_google_user')) {
+        if (! session('pending_google_user')) {
             return redirect()->route('login');
         }
 
-        return \Inertia\Inertia::render('Auth/CompleteGoogle', [
+        return Inertia::render('Auth/CompleteGoogle', [
             'name' => session('pending_google_user')['name'],
             'email' => session('pending_google_user')['email'],
         ]);
     }
 
-    public function completeGoogleRegistration(\Illuminate\Http\Request $request)
+    public function completeGoogleRegistration(Request $request)
     {
         $request->validate([
             'role' => 'required|in:parent,child',
@@ -80,7 +78,7 @@ class AuthController extends Controller
 
         $googleData = session('pending_google_user');
 
-        if (!$googleData) {
+        if (! $googleData) {
             return redirect()->route('login')->with('error', 'Session expired. Please try Google login again.');
         }
 
@@ -93,18 +91,18 @@ class AuthController extends Controller
         return redirect('/dashboard')->with('success', 'Registration successful!');
     }
 
-
     public function showRegister()
     {
-        return \Inertia\Inertia::render('Auth/Register');
+        return Inertia::render('Auth/Register');
     }
 
     public function showVerifyOtp()
     {
-        if (!session('registration_email')) {
+        if (! session('registration_email')) {
             return redirect()->route('register');
         }
-        return \Inertia\Inertia::render('Auth/VerifyOtp', [
+
+        return Inertia::render('Auth/VerifyOtp', [
             'email' => session('registration_email'),
         ]);
     }
@@ -125,6 +123,7 @@ class AuthController extends Controller
         try {
             $user = $this->authService->verifyOtpAndCreateUser($request->otp);
             Auth::login($user);
+
             return redirect('/dashboard')->with('success', 'Registration successful!');
         } catch (\InvalidArgumentException $e) {
             return redirect()->route('register')->with('error', $e->getMessage());

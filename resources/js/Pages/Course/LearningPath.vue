@@ -2,7 +2,23 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { PhArrowLeft, PhBookOpen, PhLock, PhQuestion, PhVideoCamera } from '@phosphor-icons/vue';
+import {
+    PhArrowLeft,
+    PhBookOpen,
+    PhInfo,
+    PhLock,
+    PhQuestion,
+    PhVideoCamera,
+} from '@phosphor-icons/vue';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/Components/ui/alert-dialog';
 import '@vue-flow/core/dist/style.css';
 import '@vue-flow/core/dist/theme-default.css';
 import { Handle, Position, VueFlow } from '@vue-flow/core';
@@ -181,12 +197,27 @@ function materialIcon(type) {
     return PhBookOpen;
 }
 
+const isLockedModalOpen = ref(false);
+const lockedModalLevel = ref(null);
+
+function handleLockedNodeClick(material) {
+    if (material.isLocked) {
+        lockedModalLevel.value = material;
+        isLockedModalOpen.value = true;
+    }
+}
+
 function openMaterial({ event, node }) {
     if (event.target instanceof Element && event.target.closest('a')) {
         return;
     }
 
-    if (!node.data.material.firstUnitId || node.data.material.isLocked) {
+    if (node.data.material.isLocked) {
+        handleLockedNodeClick(node.data.material);
+        return;
+    }
+
+    if (!node.data.material.firstUnitId) {
         return;
     }
 
@@ -261,6 +292,38 @@ function openMaterial({ event, node }) {
                     />
                 </section>
 
+                <!-- Flash Alert jika dialihkan dari materi terkunci -->
+                <div
+                    v-if="$page.props.flash?.warning"
+                    class="flex items-start gap-3 p-4 mt-6 border rounded-2xl bg-amber-50 border-amber-300 text-amber-900 shadow-sm"
+                    role="alert"
+                >
+                    <div class="flex items-center justify-center w-8 h-8 rounded-xl bg-amber-200/70 text-amber-800 shrink-0 mt-0.5">
+                        <PhLock :size="18" weight="bold" />
+                    </div>
+                    <div>
+                        <p class="font-bold text-amber-950">Akses Terkunci</p>
+                        <p class="mt-0.5 text-sm text-amber-800">{{ $page.props.flash.warning }}</p>
+                    </div>
+                </div>
+
+                <!-- Info Alert tentang Mekanisme Buka Level -->
+                <div
+                    class="flex items-start gap-3.5 p-4 sm:p-5 mt-6 border-2 rounded-2xl bg-amber-50/70 border-amber-200 text-amber-950 shadow-sm"
+                    role="region"
+                    aria-label="Informasi Jalur Belajar"
+                >
+                    <div class="flex items-center justify-center w-9 h-9 rounded-xl bg-amber-100 text-amber-700 shrink-0 mt-0.5">
+                        <PhInfo :size="22" weight="bold" />
+                    </div>
+                    <div class="text-sm">
+                        <p class="font-bold text-amber-950 text-base">Petunjuk Pembukaan Level</p>
+                        <p class="mt-1 text-amber-800 leading-relaxed">
+                            Level berikutnya akan terbuka secara otomatis setelah kamu menandai selesai seluruh materi/unit pada level sebelumnya. Klik pada level yang terkunci untuk melihat detailnya.
+                        </p>
+                    </div>
+                </div>
+
                 <section class="mt-8" aria-labelledby="path-heading">
                     <div class="flex items-center justify-between gap-3">
                         <div>
@@ -318,18 +381,19 @@ function openMaterial({ event, node }) {
                                         'block learning-node',
                                         data.material.firstUnitId && !data.material.isLocked
                                             ? 'cursor-pointer transition-transform hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2'
-                                            : 'learning-node--locked',
+                                            : 'learning-node--locked cursor-pointer transition-transform hover:scale-[1.02]',
                                     ]"
                                     :aria-label="
                                         data.material.firstUnitId && !data.material.isLocked
                                             ? `Buka level ${data.material.title}`
-                                            : `${data.material.title} belum tersedia`
+                                            : `${data.material.title} terkunci. Klik untuk informasi.`
                                     "
                                     :aria-disabled="
                                         data.material.isLocked || !data.material.firstUnitId
                                             ? 'true'
                                             : undefined
                                     "
+                                    @click="handleLockedNodeClick(data.material)"
                                 >
                                     <Handle
                                         type="target"
@@ -407,6 +471,31 @@ function openMaterial({ event, node }) {
                 </section>
             </div>
         </div>
+
+        <!-- Modal Alert ketika Siswa Menekan Level Terkunci -->
+        <AlertDialog :open="isLockedModalOpen" @update:open="isLockedModalOpen = $event">
+            <AlertDialogContent class="border-2 rounded-2xl border-stone-800 shadow-2xl max-w-md">
+                <AlertDialogHeader class="flex flex-col items-center text-center">
+                    <div class="flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-100 text-amber-600 mb-2">
+                        <PhLock :size="28" weight="bold" />
+                    </div>
+                    <AlertDialogTitle class="text-xl font-bold text-foreground">
+                        Level Masih Terkunci
+                    </AlertDialogTitle>
+                    <AlertDialogDescription class="text-sm text-muted-foreground mt-2 leading-relaxed">
+                        Level <span class="font-semibold text-foreground">"{{ lockedModalLevel?.title }}"</span> belum dapat diakses. Selesaikan dan tandai selesai seluruh materi/unit di level sebelumnya terlebih dahulu untuk membuka level ini.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter class="sm:justify-center mt-6">
+                    <AlertDialogAction
+                        @click="isLockedModalOpen = false"
+                        class="w-full sm:w-auto font-semibold px-6"
+                    >
+                        Saya Mengerti
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </AuthenticatedLayout>
 </template>
 
@@ -434,8 +523,8 @@ function openMaterial({ event, node }) {
     border-color: theme('colors.stone.300');
     background: theme('colors.stone.100');
     box-shadow: 0 4px 0 theme('colors.stone.300');
-    cursor: not-allowed;
-    opacity: 0.8;
+    cursor: pointer;
+    opacity: 0.85;
 }
 
 .learning-handle {
