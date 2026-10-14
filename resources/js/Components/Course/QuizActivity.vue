@@ -1,6 +1,5 @@
 <script setup>
 import { computed, onBeforeUnmount, ref } from 'vue';
-import { router } from '@inertiajs/vue3';
 import confetti from 'canvas-confetti';
 import {
     CircleHelp,
@@ -11,6 +10,7 @@ import {
 import { PhCheck, PhX } from '@phosphor-icons/vue';
 import NextMaterialButton from '@/Components/Course/NextMaterialButton.vue';
 import MarkUnitDoneButton from '@/Components/Course/MarkUnitDoneButton.vue';
+import { useStreakActivity } from '@/Composables/useStreakActivity';
 
 const props = defineProps({
     unit: {
@@ -46,11 +46,16 @@ const feedback = ref('');
 const completed = ref(false);
 const confettiTriggered = ref(false);
 
+const { recordStreakActivity, markUnitDone: requestUnitDone, unitMarkedDone } = useStreakActivity();
+
 const questions = computed(() => props.unit.questions ?? []);
 const currentQuestion = computed(() => questions.value[currentQuestionIndex.value]);
 const passingScore = computed(() => props.unit.passingScore ?? 0);
 const isLastQuestion = computed(
     () => currentQuestionIndex.value === questions.value.length - 1
+);
+const isInstantAnswerQuestion = computed(() =>
+    ['multiple_choice', 'true_false'].includes(currentQuestion.value?.type)
 );
 
 function optionCount(option) {
@@ -73,6 +78,10 @@ function triggerConfetti() {
     });
 }
 
+function markUnitDone() {
+    requestUnitDone(props.unit.id, props.completed);
+}
+
 function announceCompletion() {
     if (completed.value) {
         return;
@@ -85,13 +94,27 @@ function announceCompletion() {
     });
 
     // Auto-mark unit as done when quiz is completed
-    if (!props.completed) {
-        router.post(
-            route('progress.units.complete', { unit: props.unit.id }),
-            {},
-            { preserveScroll: true }
-        );
+    markUnitDone();
+}
+
+function handleInstantAnswer(isCorrect) {
+    if (!isCorrect) {
+        // Jawaban salah: streak tetap bertambah jika hari ini belum ada aktivitas,
+        // tetapi unit JANGAN ditandai selesai. Siswa dapat menekan 'Coba lagi'.
+        recordStreakActivity();
+
+        return;
     }
+
+    // Jawaban benar:
+    if (!isLastQuestion.value) {
+        recordStreakActivity();
+
+        return;
+    }
+
+    // Jawaban benar pada soal terakhir: otomatis tertandai selesai!
+    announceCompletion();
 }
 
 function chooseOption(option) {
@@ -117,6 +140,8 @@ function chooseOption(option) {
         streak.value = 0;
         feedback.value = `Belum tepat. ${currentQuestion.value.explanation ?? 'Coba lagi dengan teliti.'}`;
     }
+
+    handleInstantAnswer(isCorrect);
 }
 
 function submitTextAnswer() {
@@ -128,10 +153,15 @@ function submitTextAnswer() {
     const expectedAnswers = Array.isArray(currentQuestion.value.answer)
         ? currentQuestion.value.answer
         : [currentQuestion.value.answer];
-    const normalizedAnswer = textAnswer.value.trim().toLowerCase();
-    const isCorrect = expectedAnswers.some(
-        (answer) => String(answer).trim().toLowerCase() === normalizedAnswer
-    );
+    const normalizedAnswer = textAnswer.value
+        .trim()
+        .toLowerCase()
+        .replace(/[.,!]/g, '');
+    const isCorrect = expectedAnswers.some((answer) => {
+        const expected = String(answer).trim().toLowerCase().replace(/[.,!]/g, '');
+
+        return expected === normalizedAnswer;
+    });
 
     if (isCorrect) {
         answerState.value = 'correct';
@@ -143,6 +173,16 @@ function submitTextAnswer() {
         streak.value = 0;
         feedback.value = `Belum tepat. ${currentQuestion.value.explanation ?? 'Coba lagi dengan teliti.'}`;
     }
+
+    if (isCorrect && isLastQuestion.value) {
+        // Jawaban benar pada soal terakhir: otomatis tertandai selesai + streak.
+        announceCompletion();
+
+        return;
+    }
+
+    // Periksa jawaban: benar ataupun salah tetap dihitung untuk streak harian.
+    recordStreakActivity();
 }
 
 function continueQuiz() {
@@ -193,6 +233,11 @@ onBeforeUnmount(() => {
                 <h2 id="quiz-activity-title" class="mt-1 text-2xl font-bold">
                     {{ unit.title }}
                 </h2>
+            </div>
+            <div v-if="questions.length > 1" class="flex items-center gap-2">
+                <span class="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+                    Soal {{ currentQuestionIndex + 1 }} dari {{ questions.length }}
+                </span>
             </div>
         </header>
 
@@ -345,7 +390,7 @@ onBeforeUnmount(() => {
                     Coba lagi
                 </button>
                 <button
-                    v-if="answerState === 'correct'"
+                    v-if="answerState === 'correct' && !(isInstantAnswerQuestion && isLastQuestion)"
                     type="button"
                     class="rounded-md bg-primary px-4 py-2 font-semibold text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     @click="continueQuiz"
@@ -360,7 +405,7 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="flex justify-between">
-            <MarkUnitDoneButton :unit-id="unit.id" :completed="props.completed || completed" />
+            <MarkUnitDoneButton :unit-id="unit.id" :completed="props.completed || completed || unitMarkedDone" />
             <NextMaterialButton v-if="nextUnitHref" :href="nextUnitHref" :title="nextUnitTitle" />
         </div>
     </section>

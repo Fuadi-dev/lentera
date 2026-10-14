@@ -259,15 +259,20 @@ const confirmUnpair = () => {
                                             >
                                                 Streak belajar
                                             </p>
-                                            <span class="rounded-lg bg-primary/10 p-2 text-primary">
-                                                <PhFire :size="18" aria-hidden="true" />
-                                            </span>
+                                            <img
+                                                :src="child.streakActiveToday ? '/images/ui/streak.png' : '/images/ui/not streak.png'"
+                                                alt="Streak"
+                                                class="object-contain w-7 h-7"
+                                            />
                                         </div>
                                         <p class="mt-4 text-3xl font-bold tracking-tight text-foreground">
                                             {{ child.streak }} hari
                                         </p>
-                                        <p class="mt-2 text-xs text-muted-foreground">
-                                            terus pertahankan!
+                                        <p
+                                            class="mt-2 text-xs font-medium"
+                                            :class="child.streakActiveToday ? 'text-orange-600' : 'text-muted-foreground'"
+                                        >
+                                            {{ child.streakActiveToday ? 'Api menyala hari ini 🔥' : (child.streak > 0 ? 'Belum belajar hari ini' : 'Belum ada streak') }}
                                         </p>
                                     </Card>
 

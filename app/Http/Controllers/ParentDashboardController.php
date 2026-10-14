@@ -83,7 +83,8 @@ class ParentDashboardController extends Controller
                 'overallProgress' => $overallProgress,
                 'completedLessons' => $completedCount,
                 'totalLessons' => $totalUnitsCount,
-                'streak' => $child->streak?->current_streak ?? 0,
+                'streak' => $child->streak?->active_streak ?? 0,
+                'streakActiveToday' => $child->streak?->is_active_today ?? false,
                 'lastActivity' => $lastActivity,
                 'subjects' => $subjectsProgress,
             ];

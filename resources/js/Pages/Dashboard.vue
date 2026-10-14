@@ -61,6 +61,30 @@ const filteredCourses = computed(() => {
                             Yuk, semangat belajar hari ini! Setiap langkah kecil bikin kamu makin
                             pintar. Kamu pasti bisa!
                         </p>
+                        <div
+                            v-if="$page.props.auth.user?.role === 'child'"
+                            class="inline-flex items-center gap-2 px-3.5 py-1.5 mt-3 border rounded-full text-xs md:text-sm font-bold transition-all duration-300"
+                            :class="
+                                $page.props.auth.streak_active_today
+                                    ? 'bg-orange-100 border-orange-200 text-orange-700 shadow-sm'
+                                    : 'bg-gray-100 border-gray-200 text-gray-600'
+                            "
+                        >
+                            <img
+                                :src="$page.props.auth.streak_active_today ? '/images/ui/streak.png' : '/images/ui/not streak.png'"
+                                alt="Streak"
+                                class="object-contain w-5 h-5"
+                            />
+                            <span v-if="$page.props.auth.streak_active_today">
+                                {{ $page.props.auth.streak }} Hari Streak Aktif — Sudah Belajar Hari Ini 🔥
+                            </span>
+                            <span v-else-if="($page.props.auth.streak ?? 0) > 0">
+                                {{ $page.props.auth.streak }} Hari Streak — Belum Belajar Hari Ini, Yuk Lanjut!
+                            </span>
+                            <span v-else>
+                                Streak Belum Aktif — Belajar Hari Ini untuk Menyalakan Api!
+                            </span>
+                        </div>
                     </div>
                     <img
                         src="/images/brand/maskot.png"

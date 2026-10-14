@@ -2,6 +2,8 @@
 import { ref } from 'vue';
 import { DragDropProvider } from '@dnd-kit/vue';
 import { move } from '@dnd-kit/helpers';
+import confetti from 'canvas-confetti';
+import { RotateCcw } from 'lucide-vue-next';
 import QuestionDragItem from '@/Components/Course/QuestionDragItem.vue';
 import SortableQuestionDragItem from '@/Components/Course/SortableQuestionDragItem.vue';
 import QuestionDropZone from '@/Components/Course/QuestionDropZone.vue';
@@ -15,6 +17,7 @@ import NextMaterialButton from '@/Components/Course/NextMaterialButton.vue';
 import MarkUnitDoneButton from '@/Components/Course/MarkUnitDoneButton.vue';
 import CardHeader from '@/Components/ui/card/CardHeader.vue';
 import CardTitle from '@/Components/ui/card/CardTitle.vue';
+import { useStreakActivity } from '@/Composables/useStreakActivity';
 
 const props = defineProps({
     material: { type: Object, required: true },
@@ -23,15 +26,54 @@ const props = defineProps({
     completed: { type: Boolean, default: false },
 });
 
+function isOrderingQuestion(question) {
+    return question.mode === 'ordering' || Array.isArray(question.answer);
+}
+
+function getInitialOrderingItems() {
+    return (props.material.items ?? props.material.options ?? []).map((item) => item.id);
+}
+
 const answers = ref({
     [props.material.id]: {
-        ordering:
-            props.material.mode === 'ordering'
-                ? (props.material.items ?? props.material.options ?? []).map((item) => item.id)
-                : [],
+        ordering: isOrderingQuestion(props.material) ? getInitialOrderingItems() : [],
     },
 });
 const submitted = ref(false);
+
+const { recordStreakActivity, markUnitDone, unitMarkedDone } = useStreakActivity();
+
+function checkAnswer() {
+    submitted.value = true;
+
+    if (isAnswerCorrect(props.material)) {
+        try {
+            confetti({
+                particleCount: 60,
+                spread: 60,
+                origin: { y: 0.7 },
+                colors: ['#16a34a', '#22c55e', '#f59e0b'],
+            });
+        } catch {
+            // ignore fallback
+        }
+
+        // Jawaban benar: otomatis tertandai selesai + streak hari ini.
+        markUnitDone(props.material.id, props.completed);
+
+        return;
+    }
+
+    // Jawaban salah: tetap dihitung untuk streak harian jika hari ini belum tercatat.
+    recordStreakActivity();
+}
+
+function retryQuestion() {
+    submitted.value = false;
+    answers.value[props.material.id] = {
+        ordering: isOrderingQuestion(props.material) ? getInitialOrderingItems() : [],
+    };
+}
 
 function questionItems(question) {
     return question.items ?? question.options ?? [];
@@ -45,10 +87,6 @@ function questionAnswer(questionId, zoneId) {
     return answers.value[questionId]?.[zoneId] ?? [];
 }
 
-function isOrderingQuestion(question) {
-    return question.mode === 'ordering';
-}
-
 function orderingAnswer(question) {
     return Array.isArray(question.answer) ? question.answer : (question.answer?.ordering ?? []);
 }
@@ -59,23 +97,28 @@ function isOrderingCorrect(question) {
 
     return (
         actualAnswer.length === expectedAnswer.length &&
-        actualAnswer.every((itemId, index) => itemId === expectedAnswer[index])
+        actualAnswer.every((itemId, index) => String(itemId) === String(expectedAnswer[index]))
     );
 }
 
 function isDropZoneCorrect(question) {
     const expectedAnswer = question.answer ?? {};
     const actualAnswer = answers.value[question.id] ?? {};
+    const zones = Object.keys(expectedAnswer);
 
-    return Object.keys(expectedAnswer).every((zoneId) => {
+    if (zones.length === 0) {
+        return false;
+    }
+
+    return zones.every((zoneId) => {
         const expectedItems = Array.isArray(expectedAnswer[zoneId])
             ? expectedAnswer[zoneId]
-            : [];
+            : [expectedAnswer[zoneId]];
         const actualItems = actualAnswer[zoneId] ?? [];
 
         return (
             actualItems.length === expectedItems.length &&
-            expectedItems.every((itemId) => actualItems.includes(itemId))
+            expectedItems.every((itemId) => actualItems.some((actual) => String(actual) === String(itemId)))
         );
     });
 }
@@ -219,7 +262,11 @@ function handleDragEnd(event) {
             </DragDropProvider>
         </CardContent>
         <CardFooter class="justify-between">
-            <p v-if="submitted" class="text-sm font-semibold">
+            <p
+                v-if="submitted"
+                class="text-sm font-semibold"
+                :class="isAnswerCorrect(material) ? 'text-green-600' : 'text-amber-600'"
+            >
                 <template v-if="isOrderingQuestion(material)">
                     {{
                         isOrderingCorrect(material)
@@ -236,10 +283,24 @@ function handleDragEnd(event) {
                 </template>
             </p>
             <div class="flex gap-3">
-                <Button type="button" @click="submitted = true">
-                    {{ submitted && isAnswerCorrect(material) ? 'Benar' : 'Periksa jawaban' }}
+                <Button
+                    v-if="submitted && !isAnswerCorrect(material)"
+                    type="button"
+                    variant="outline"
+                    class="gap-2"
+                    @click="retryQuestion"
+                >
+                    <RotateCcw class="w-4 h-4" />
+                    Coba lagi
                 </Button>
-                <MarkUnitDoneButton :unit-id="material.id" :completed="completed" />
+                <Button
+                    type="button"
+                    :disabled="submitted && isAnswerCorrect(material)"
+                    @click="checkAnswer"
+                >
+                    {{ submitted && isAnswerCorrect(material) ? 'Benar!' : 'Periksa jawaban' }}
+                </Button>
+                <MarkUnitDoneButton :unit-id="material.id" :completed="completed || unitMarkedDone" />
             </div>
             <NextMaterialButton
                 v-if="nextUnitHref"
