@@ -14,7 +14,7 @@ class QuestionFactory extends Factory
             'id' => (string) Str::uuid(),
             'unit_id' => Unit::factory(),
             'type' => 'multiple_choice',
-            'question' => $this->faker->sentence() . '?',
+            'question' => $this->faker->sentence().'?',
             'answer' => [],
             'explanation' => $this->faker->sentence(),
             'points' => 10,

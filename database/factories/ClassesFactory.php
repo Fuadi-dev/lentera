@@ -12,7 +12,7 @@ class ClassesFactory extends Factory
         return [
             'subject_id' => Subject::factory(),
             'number' => $this->faker->numberBetween(1, 6),
-            'title' => 'Kelas ' . $this->faker->numberBetween(1, 6),
+            'title' => 'Kelas '.$this->faker->numberBetween(1, 6),
             'description' => $this->faker->sentence(),
         ];
     }

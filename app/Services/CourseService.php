@@ -13,8 +13,12 @@ class CourseService
      */
     public function getCourse(string $courseId)
     {
-        return Subject::with(['classes.levels.chapters.units', 'classes.levels.chapters.finalTest'])
+        $course = Subject::with(['classes.levels.chapters.units', 'classes.levels.chapters.finalTest'])
             ->findOrFail($courseId);
+
+        $this->applyLevelAccess($course);
+
+        return $course;
     }
 
     /**
@@ -31,8 +35,6 @@ class CourseService
         if (! $classExists) {
             abort(404, 'Class not found in this course.');
         }
-
-        $this->applyLevelAccess($course);
 
         return $course;
     }
@@ -53,7 +55,7 @@ class CourseService
             })->firstOrFail();
 
         $materialLevel = $course->classes
-            ->flatMap(fn($courseClass) => $courseClass->levels)
+            ->flatMap(fn ($courseClass) => $courseClass->levels)
             ->firstWhere('id', $material->chapter->level_id);
 
         if (! $materialLevel || $materialLevel->isLocked) {
@@ -68,8 +70,8 @@ class CourseService
             $material->setAttribute('explanation', $question->explanation);
             $material->setAttribute(
                 'items',
-                $question->options->map(fn($option) => [
-                    'id' => str($option->id)->after($question->id . '-')->toString(),
+                $question->options->map(fn ($option) => [
+                    'id' => str($option->id)->after($question->id.'-')->toString(),
                     'label' => $option->text,
                 ])->values()->all()
             );
@@ -78,7 +80,7 @@ class CourseService
             $material->setAttribute(
                 'dropZones',
                 array_map(
-                    fn($zoneId) => [
+                    fn ($zoneId) => [
                         'id' => $zoneId,
                         'label' => match ($zoneId) {
                             'genap' => 'Bilangan genap',
@@ -101,27 +103,36 @@ class CourseService
     {
         $student = auth()->user()?->student;
 
+        $completedUnitIds = $student
+            ? $student->unitProgress()
+                ->where('is_completed', true)
+                ->pluck('unit_id')
+                ->map(fn ($id) => (string) $id)
+                ->flip()
+            : collect();
+
         foreach ($course->classes as $courseClass) {
             $previousLevelCompleted = true;
 
             foreach ($courseClass->levels->sortBy('number')->values() as $level) {
                 $level->setAttribute('isLocked', ! $previousLevelCompleted);
-                $previousLevelCompleted = $this->isLevelCompleted($level, $student);
+                $previousLevelCompleted = $this->isLevelCompleted($level, $completedUnitIds, $student);
             }
         }
     }
 
-    private function isLevelCompleted($level, ?Student $student): bool
+    private function isLevelCompleted($level, $completedUnitIds, ?Student $student): bool
     {
-        $chapterIds = $level->chapters->pluck('id');
-
-        if ($chapterIds->isEmpty() || ! $student) {
+        if (! $student) {
             return false;
         }
 
-        return $student->chapterCompletions()
-            ->whereIn('chapter_id', $chapterIds)
-            ->where('is_passed', true)
-            ->count() === $chapterIds->count();
+        $units = $level->chapters->flatMap(fn ($chapter) => $chapter->units);
+
+        if ($units->isEmpty()) {
+            return false;
+        }
+
+        return $units->every(fn ($unit) => isset($completedUnitIds[(string) $unit->id]));
     }
 }

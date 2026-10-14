@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
-import { PhArrowLeft, PhArrowRight } from '@phosphor-icons/vue';
+import { PhArrowLeft, PhArrowRight, PhInfo, PhLock, PhSparkle } from '@phosphor-icons/vue';
 
 const props = defineProps({
     course: {
@@ -9,6 +9,11 @@ const props = defineProps({
         required: true,
     },
 });
+
+function unlockedLevelsCount(courseClass) {
+    if (!courseClass.levels?.length) return 0;
+    return courseClass.levels.filter((level) => !level.isLocked).length;
+}
 </script>
 
 <template>
@@ -65,6 +70,38 @@ const props = defineProps({
                     />
                 </section>
 
+                <!-- Flash Alert jika ada redirect dari level terkunci -->
+                <div
+                    v-if="$page.props.flash?.warning"
+                    class="flex items-start gap-3 p-4 border rounded-2xl bg-amber-50 border-amber-300 text-amber-900 shadow-sm"
+                    role="alert"
+                >
+                    <div class="flex items-center justify-center w-8 h-8 rounded-xl bg-amber-200/70 text-amber-800 shrink-0 mt-0.5">
+                        <PhLock :size="18" weight="bold" />
+                    </div>
+                    <div>
+                        <p class="font-bold text-amber-950">Akses Dibatasi</p>
+                        <p class="mt-0.5 text-sm text-amber-800">{{ $page.props.flash.warning }}</p>
+                    </div>
+                </div>
+
+                <!-- Info Alert tentang Mekanisme Level Unlock -->
+                <div
+                    class="flex items-start gap-3.5 p-4 sm:p-5 border-2 rounded-2xl bg-amber-50/70 border-amber-200 text-amber-950 shadow-sm"
+                    role="region"
+                    aria-label="Informasi Jalur Belajar"
+                >
+                    <div class="flex items-center justify-center w-9 h-9 rounded-xl bg-amber-100 text-amber-700 shrink-0 mt-0.5">
+                        <PhInfo :size="22" weight="bold" />
+                    </div>
+                    <div class="text-sm">
+                        <p class="font-bold text-amber-950 text-base">Petunjuk Pembukaan Level</p>
+                        <p class="mt-1 text-amber-800 leading-relaxed">
+                            Level berikutnya akan terbuka secara otomatis setelah kamu menandai selesai seluruh unit materi pada level sebelumnya. Selesaikan tantangannya langkah demi langkah!
+                        </p>
+                    </div>
+                </div>
+
                 <section class="space-y-4" aria-labelledby="class-selection-heading">
                     <div>
                         <h3
@@ -91,13 +128,20 @@ const props = defineProps({
                             type="button"
                             class="flex flex-col p-5 text-left transition-all duration-200 border group min-h-56 rounded-2xl border-border bg-card hover:-translate-y-1 hover:shadow-md"
                         >
-                            <span class="flex items-center gap-3">
+                            <div class="flex items-center justify-between gap-2">
                                 <span class="text-base font-semibold text-muted-foreground">
                                     Kelas {{ courseClass.number }}
                                 </span>
-                            </span>
+                                <span
+                                    v-if="courseClass.levels?.length"
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-primary/10 text-primary"
+                                >
+                                    <PhSparkle :size="13" weight="fill" />
+                                    {{ unlockedLevelsCount(courseClass) }} / {{ courseClass.levels.length }} Level Terbuka
+                                </span>
+                            </div>
 
-                            <span class="block mt-5 text-2xl font-bold text-foreground">
+                            <span class="block mt-4 text-2xl font-bold text-foreground">
                                 {{ courseClass.title }}
                             </span>
                             <span class="block mt-2 text-sm leading-6 text-muted-foreground">

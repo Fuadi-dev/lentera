@@ -14,7 +14,7 @@ class LevelFactory extends Factory
             'id' => (string) Str::uuid(),
             'class_id' => Classes::factory(),
             'number' => $this->faker->numberBetween(1, 3),
-            'title' => 'Tingkat ' . $this->faker->numberBetween(1, 3),
+            'title' => 'Tingkat '.$this->faker->numberBetween(1, 3),
             'description' => $this->faker->sentence(),
         ];
     }
