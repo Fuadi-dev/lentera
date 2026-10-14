@@ -7,6 +7,7 @@ import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/Components/ui/tooltip';
 import { Link } from '@inertiajs/vue3';
+import StreakCelebrationModal from '@/Components/Course/StreakCelebrationModal.vue';
 
 const showingNavigationDropdown = ref(false);
 </script>
@@ -37,25 +38,41 @@ const showingNavigationDropdown = ref(false);
                         </div>
 
                         <div class="hidden sm:ms-6 sm:flex sm:items-center">
-                            <TooltipProvider>
+                            <TooltipProvider v-if="$page.props.auth.user?.role === 'child'">
                                 <Tooltip>
                                     <TooltipTrigger as-child>
-                                        <div class="flex items-center">
+                                        <div class="flex items-center cursor-pointer select-none">
                                             <img
-                                                src="/images/ui/streak.png"
+                                                :src="$page.props.auth.streak_active_today ? '/images/ui/streak.png' : '/images/ui/not streak.png'"
                                                 alt="Streak"
-                                                class="object-contain w-11 h-11"
+                                                class="object-contain w-11 h-11 transition-all duration-300"
+                                                :class="{ 'drop-shadow-sm hover:scale-105': $page.props.auth.streak_active_today }"
                                             />
-                                            <span class="text-base font-semibold text-orange-500"
-                                                >3</span
+                                            <span
+                                                :class="[
+                                                    'text-base font-bold transition-colors duration-200',
+                                                    $page.props.auth.streak_active_today ? 'text-orange-500' : 'text-gray-400',
+                                                ]"
                                             >
+                                                {{ $page.props.auth.streak ?? 0 }}
+                                            </span>
                                         </div>
                                     </TooltipTrigger>
-                                    <TooltipContent>Streak 3 hari</TooltipContent>
+                                    <TooltipContent>
+                                        <span v-if="$page.props.auth.streak_active_today">
+                                            Streak {{ $page.props.auth.streak }} hari (Aktif hari ini! 🔥)
+                                        </span>
+                                        <span v-else-if="($page.props.auth.streak ?? 0) > 0">
+                                            Streak {{ $page.props.auth.streak }} hari (Belajar hari ini untuk menyalakan api!)
+                                        </span>
+                                        <span v-else>
+                                            Belum ada streak (Yuk belajar hari ini untuk menyalakan api!)
+                                        </span>
+                                    </TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>
 
-                            <div class="w-px h-8 mx-3 bg-gray-200" aria-hidden="true"></div>
+                            <div v-if="$page.props.auth.user?.role === 'child'" class="w-px h-8 mx-3 bg-gray-200" aria-hidden="true"></div>
 
                             <div class="relative">
                                 <Dropdown align="right" width="48">
@@ -100,21 +117,36 @@ const showingNavigationDropdown = ref(false);
                         </div>
 
                         <div class="flex items-center -me-2 sm:hidden">
-                            <TooltipProvider>
+                            <TooltipProvider v-if="$page.props.auth.user?.role === 'child'">
                                 <Tooltip>
                                     <TooltipTrigger as-child>
-                                        <div class="flex items-center me-2">
+                                        <div class="flex items-center me-2 select-none">
                                             <img
-                                                src="/images/ui/streak.png"
+                                                :src="$page.props.auth.streak_active_today ? '/images/ui/streak.png' : '/images/ui/not streak.png'"
                                                 alt="Streak"
-                                                class="object-contain w-9 h-9"
+                                                class="object-contain w-9 h-9 transition-all duration-300"
                                             />
-                                            <span class="text-sm font-semibold text-orange-500"
-                                                >3</span
+                                            <span
+                                                :class="[
+                                                    'text-sm font-bold transition-colors duration-200',
+                                                    $page.props.auth.streak_active_today ? 'text-orange-500' : 'text-gray-400',
+                                                ]"
                                             >
+                                                {{ $page.props.auth.streak ?? 0 }}
+                                            </span>
                                         </div>
                                     </TooltipTrigger>
-                                    <TooltipContent>Streak 3 hari</TooltipContent>
+                                    <TooltipContent>
+                                        <span v-if="$page.props.auth.streak_active_today">
+                                            Streak {{ $page.props.auth.streak }} hari (Aktif hari ini! 🔥)
+                                        </span>
+                                        <span v-else-if="($page.props.auth.streak ?? 0) > 0">
+                                            Streak {{ $page.props.auth.streak }} hari (Belajar hari ini untuk menyalakan api!)
+                                        </span>
+                                        <span v-else>
+                                            Belum ada streak (Yuk belajar hari ini untuk menyalakan api!)
+                                        </span>
+                                    </TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>
 
@@ -202,5 +234,7 @@ const showingNavigationDropdown = ref(false);
                 <slot />
             </main>
         </div>
+
+        <StreakCelebrationModal />
     </div>
 </template>

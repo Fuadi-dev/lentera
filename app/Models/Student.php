@@ -57,4 +57,14 @@ class Student extends Model
     {
         return $this->hasOne(StudentStreak::class);
     }
+
+    public function getActiveStreak(): int
+    {
+        return $this->streak?->active_streak ?? 0;
+    }
+
+    public function isStreakActiveToday(): bool
+    {
+        return $this->streak?->is_active_today ?? false;
+    }
 }

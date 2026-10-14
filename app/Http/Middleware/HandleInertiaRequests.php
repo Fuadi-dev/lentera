@@ -33,6 +33,15 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user(),
+                'streak' => fn () => $request->user()?->role === 'child'
+                    ? ($request->user()->student?->streak?->active_streak ?? 0)
+                    : null,
+                'streak_active_today' => fn () => $request->user()?->role === 'child'
+                    ? ($request->user()->student?->streak?->is_active_today ?? false)
+                    : false,
+            ],
+            'flash' => [
+                'streak_award' => fn () => $request->session()->get('streak_award'),
             ],
         ];
     }
