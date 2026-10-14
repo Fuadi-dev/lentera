@@ -11,6 +11,7 @@ class StudentChapterCompletion extends Model
     use HasFactory, HasUuids;
 
     protected $guarded = [];
+
     protected $casts = [
         'is_passed' => 'boolean',
         'completed_at' => 'datetime',

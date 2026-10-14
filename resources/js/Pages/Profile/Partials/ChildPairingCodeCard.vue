@@ -66,9 +66,6 @@ const handleRegenerate = () => {
 <template>
     <section>
         <header class="flex items-center gap-3">
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <PhUsers :size="22" weight="bold" />
-            </div>
             <div>
                 <h2 class="text-lg font-bold text-gray-900">
                     Kode Hubung Orang Tua
@@ -82,10 +79,6 @@ const handleRegenerate = () => {
         <div class="mt-6 rounded-2xl border border-primary/20 bg-primary/5 p-5 sm:p-6">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <span class="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                        <PhSparkle :size="14" weight="fill" />
-                        Kode Unik Kamu
-                    </span>
                     <div class="mt-2 flex items-center gap-3">
                         <span class="font-mono text-3xl font-black tracking-wider text-primary">
                             {{ pairingCode || 'Belum dibuat' }}

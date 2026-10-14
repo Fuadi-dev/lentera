@@ -10,7 +10,9 @@ class QuestionOption extends Model
     use HasFactory;
 
     protected $keyType = 'string';
+
     public $incrementing = false;
+
     protected $guarded = [];
 
     public function question()

@@ -12,7 +12,7 @@ class CourseRequest extends FormRequest
     public function authorize(): bool
     {
         // Must be authenticated to view courses, which is handled by auth middleware
-        return true; 
+        return true;
     }
 
     /**

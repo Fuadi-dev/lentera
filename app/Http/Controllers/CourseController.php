@@ -42,7 +42,7 @@ class CourseController extends Controller
             return to_route('courses.learning-path', [
                 'course' => $course,
                 'class' => $class,
-            ]);
+            ])->with('warning', 'Level materi ini masih terkunci. Selesaikan seluruh unit di level sebelumnya terlebih dahulu.');
         }
 
         return Inertia::render('Course/Material', [
