@@ -42,8 +42,6 @@ class HandleInertiaRequests extends Middleware
             ],
             'flash' => [
                 'streak_award' => fn () => $request->session()->get('streak_award'),
-            ],
-            'flash' => [
                 'message' => fn () => $request->session()->get('message'),
                 'success' => fn () => $request->session()->get('success'),
                 'warning' => fn () => $request->session()->get('warning'),

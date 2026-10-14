@@ -33,6 +33,18 @@ class CourseProgressController extends Controller
         return back();
     }
 
+    public function recordStreak(Request $request): RedirectResponse
+    {
+        $student = $this->studentFor($request);
+
+        $streakResult = $this->streakService->recordActivity($student);
+        if ($streakResult['streak_increased']) {
+            session()->flash('streak_award', $streakResult);
+        }
+
+        return back();
+    }
+
     public function completeChapter(Request $request, string $chapter): RedirectResponse
     {
         $student = $this->studentFor($request);

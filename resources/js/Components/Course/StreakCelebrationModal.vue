@@ -46,18 +46,40 @@ function fireConfetti() {
     }
 }
 
+function openCelebration(data) {
+    if (isOpen.value) {
+        return;
+    }
+
+    streakData.value = data;
+    isOpen.value = true;
+    nextTick(() => {
+        fireConfetti();
+    });
+}
+
 watch(
     () => page.props.flash?.streak_award,
     (newAward) => {
         if (newAward && newAward.streak_increased) {
-            streakData.value = newAward;
-            isOpen.value = true;
-            nextTick(() => {
-                fireConfetti();
-            });
+            openCelebration(newAward);
         }
     },
     { immediate: true, deep: true }
+);
+
+// Cadangan: jika flash tidak terbawa, perubahan status streak menjadi aktif hari ini tetap memicu animasi.
+watch(
+    () => page.props.auth?.streak_active_today,
+    (isActiveToday, wasActiveToday) => {
+        if (isActiveToday === true && wasActiveToday === false) {
+            openCelebration({
+                streak_increased: true,
+                current_streak: page.props.auth?.streak ?? 1,
+                longest_streak: null,
+            });
+        }
+    }
 );
 
 function closeModal() {

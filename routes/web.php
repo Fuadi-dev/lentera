@@ -31,6 +31,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard/courses/{course}/classes/{class}', [CourseController::class, 'learningPath'])->name('courses.learning-path');
     Route::get('/dashboard/courses/{course}/classes/{class}/materials/{material}', [CourseController::class, 'material'])->name('courses.material');
     Route::post('/dashboard/progress/units/{unit}/complete', [CourseProgressController::class, 'completeUnit'])->name('progress.units.complete');
+    Route::post('/dashboard/progress/streak', [CourseProgressController::class, 'recordStreak'])->name('progress.streak.record');
     Route::post('/dashboard/progress/chapters/{chapter}/complete', [CourseProgressController::class, 'completeChapter'])->name('progress.chapters.complete');
 
     Route::post('/parent/children/pair', [ParentDashboardController::class, 'pairChild'])->name('parent.children.pair');

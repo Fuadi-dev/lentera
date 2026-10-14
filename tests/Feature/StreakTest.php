@@ -190,4 +190,60 @@ class StreakTest extends TestCase
         $this->assertNotNull($streak);
         $this->assertEquals(1, $streak->current_streak);
     }
+
+    public function test_recording_streak_activity_does_not_mark_unit_as_completed(): void
+    {
+        [$user, $student] = $this->createChildUser();
+        $unit = $this->createUnit();
+
+        $response = $this->actingAs($user)->post(route('progress.streak.record'));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('streak_award');
+
+        $this->assertEquals(1, StudentStreak::where('student_id', $student->id)->first()->current_streak);
+        $this->assertDatabaseMissing('student_unit_progress', [
+            'student_id' => $student->id,
+            'unit_id' => $unit->id,
+        ]);
+    }
+
+    public function test_recording_streak_activity_twice_on_same_day_only_counts_once(): void
+    {
+        [$user, $student] = $this->createChildUser();
+
+        $this->actingAs($user)->post(route('progress.streak.record'));
+        $response = $this->actingAs($user)->post(route('progress.streak.record'));
+
+        $response->assertSessionMissing('streak_award');
+        $this->assertEquals(1, StudentStreak::where('student_id', $student->id)->first()->current_streak);
+    }
+
+    public function test_recording_streak_activity_is_forbidden_for_parents(): void
+    {
+        $parent = User::factory()->create(['role' => 'parent', 'email_verified_at' => now()]);
+
+        $this->actingAs($parent)->post(route('progress.streak.record'))->assertForbidden();
+    }
+
+    public function test_streak_award_is_passed_via_inertia_flash_props(): void
+    {
+        [$user, $student] = $this->createChildUser();
+        $unit = $this->createUnit();
+
+        session()->flash('streak_award', [
+            'streak_increased' => true,
+            'current_streak' => 1,
+            'longest_streak' => 1,
+            'is_new_streak' => true,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertInertia(fn ($page) => $page
+            ->has('flash.streak_award')
+            ->where('flash.streak_award.streak_increased', true)
+            ->where('flash.streak_award.current_streak', 1)
+        );
+    }
 }

@@ -77,20 +77,27 @@ class CourseService
             );
 
             $answer = is_array($question->answer) ? $question->answer : [];
-            $material->setAttribute(
-                'dropZones',
-                array_map(
-                    fn ($zoneId) => [
-                        'id' => $zoneId,
-                        'label' => match ($zoneId) {
-                            'genap' => 'Bilangan genap',
-                            'ganjil' => 'Bilangan ganjil',
-                            default => ucfirst($zoneId),
-                        },
-                    ],
-                    array_keys($answer)
-                )
-            );
+            $isOrdering = array_is_list($answer);
+            $material->setAttribute('mode', $isOrdering ? 'ordering' : 'dropZone');
+
+            if (! $isOrdering) {
+                $material->setAttribute(
+                    'dropZones',
+                    array_map(
+                        fn ($zoneId) => [
+                            'id' => $zoneId,
+                            'label' => match ($zoneId) {
+                                'genap' => 'Bilangan genap',
+                                'ganjil' => 'Bilangan ganjil',
+                                default => ucwords(str_replace('_', ' ', (string) $zoneId)),
+                            },
+                        ],
+                        array_keys($answer)
+                    )
+                );
+            } else {
+                $material->setAttribute('dropZones', []);
+            }
         }
 
         return [
