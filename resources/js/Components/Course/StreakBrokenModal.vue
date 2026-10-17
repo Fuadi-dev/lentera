@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
+import { ref, watch, onMounted, onBeforeUnmount, computed } from 'vue';
 import { usePage, router } from '@inertiajs/vue3';
 import {
     Dialog,
@@ -9,16 +9,18 @@ import {
     DialogDescription,
 } from '@/Components/ui/dialog';
 import Button from '@/Components/ui/button/Button.vue';
-import { PhWind, PhFire, PhArrowClockwise, PhTrophy } from '@phosphor-icons/vue';
+import { PhWind, PhFire, PhArrowClockwise, PhTrophy, PhHourglass, PhSparkle } from '@phosphor-icons/vue';
 
 const page = usePage();
 const isOpen = ref(false);
+const modalMode = ref('broken'); // 'broken' | 'reminder' | 'none'
 const isExtinguished = ref(false);
 const isCracking = ref(false);
 
-const previousStreak = ref(3);
-const longestStreak = ref(5);
-const currentDisplayCount = ref(3);
+const previousStreak = ref(1);
+const currentStreak = ref(1);
+const longestStreak = ref(1);
+const currentDisplayCount = ref(1);
 
 let animationTimeout1 = null;
 let animationTimeout2 = null;
@@ -88,10 +90,45 @@ function clearTimeouts() {
 }
 
 function openModal(data = {}) {
-    previousStreak.value = Number(data.previous_streak ?? 3);
-    longestStreak.value = Number(data.longest_streak ?? Math.max(previousStreak.value, 5));
-    isOpen.value = true;
-    startExtinguishAnimation();
+    clearTimeouts();
+
+    const isBroken = page.props.auth?.streak_broken?.is_broken;
+    const authStreak = Number(page.props.auth?.streak ?? 0);
+
+    // Determine mode if not explicitly provided
+    let mode = data.mode;
+    if (!mode) {
+        if (isBroken) {
+            mode = 'broken';
+        } else if (authStreak > 0) {
+            mode = 'reminder';
+        } else {
+            mode = 'none';
+        }
+    }
+    modalMode.value = mode;
+
+    if (mode === 'broken') {
+        previousStreak.value = Number(data.previous_streak || page.props.auth?.streak_broken?.previous_streak || 1);
+        longestStreak.value = Number(data.longest_streak || page.props.auth?.streak_broken?.longest_streak || previousStreak.value);
+        currentDisplayCount.value = previousStreak.value;
+        isOpen.value = true;
+        startExtinguishAnimation();
+    } else if (mode === 'reminder') {
+        currentStreak.value = Number(data.current_streak || authStreak || 1);
+        longestStreak.value = Number(data.longest_streak || page.props.auth?.streak_broken?.longest_streak || currentStreak.value);
+        currentDisplayCount.value = currentStreak.value;
+        isCracking.value = false;
+        isExtinguished.value = true; // gray flame because flame is off today, but NOT cracked or reset to 0!
+        isOpen.value = true;
+    } else {
+        currentStreak.value = 0;
+        longestStreak.value = Number(data.longest_streak || page.props.auth?.streak_broken?.longest_streak || 0);
+        currentDisplayCount.value = 0;
+        isCracking.value = false;
+        isExtinguished.value = true;
+        isOpen.value = true;
+    }
 }
 
 function closeModal() {
@@ -110,15 +147,18 @@ function handleStartLearning() {
     }
 }
 
-// Auto-detection from Backend Inertia auth props
+// Auto-detection from Backend Inertia auth props:
+// ONLY auto-open if streak is GENUINELY BROKEN (didiamkan kemarin sampai berganti hari).
+// Uses last_activity_date in localStorage key so child only sees the modal ONCE per broken streak.
 watch(
     () => page.props.auth?.streak_broken,
     (brokenInfo) => {
         if (brokenInfo && brokenInfo.is_broken) {
-            const todayKey = new Date().toISOString().split('T')[0];
-            const storageKey = `lentera_streak_broken_seen_${page.props.auth?.user?.id}_${todayKey}`;
+            const breakId = brokenInfo.last_activity_date || new Date().toISOString().split('T')[0];
+            const storageKey = `lentera_streak_broken_seen_${page.props.auth?.user?.id}_${breakId}`;
             if (!localStorage.getItem(storageKey)) {
                 openModal({
+                    mode: 'broken',
                     previous_streak: brokenInfo.previous_streak,
                     longest_streak: brokenInfo.longest_streak,
                 });
@@ -131,21 +171,24 @@ watch(
 
 function handleCustomOpenEvent(event) {
     const detail = event.detail || {};
-    openModal({
-        previous_streak: detail.previous_streak ?? (page.props.auth?.streak_broken?.previous_streak || 3),
-        longest_streak: detail.longest_streak ?? (page.props.auth?.streak_broken?.longest_streak || 5),
-    });
+    openModal(detail);
 }
 
 onMounted(() => {
     window.addEventListener('open-streak-broken', handleCustomOpenEvent);
 
-    // Check for demo trigger query: ?demo_streak_broken=1
+    // Support query parameter testing:
+    // ?demo_streak_broken=1
+    // ?demo_streak_reminder=1
     if (typeof window !== 'undefined') {
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('demo_streak_broken') === '1' || urlParams.get('streak_broken') === '1') {
             setTimeout(() => {
-                openModal({ previous_streak: 5, longest_streak: 7 });
+                openModal({ mode: 'broken', previous_streak: 5, longest_streak: 7 });
+            }, 500);
+        } else if (urlParams.get('demo_streak_reminder') === '1') {
+            setTimeout(() => {
+                openModal({ mode: 'reminder', current_streak: 3, longest_streak: 5 });
             }, 500);
         }
     }
@@ -159,43 +202,54 @@ onBeforeUnmount(() => {
 
 <template>
     <Dialog :open="isOpen" @update:open="(val) => (isOpen = val)">
-        <DialogContent class="max-w-sm sm:max-w-md p-6 overflow-hidden text-center border-slate-200 bg-gradient-to-b from-slate-50 via-white to-blue-50/30 shadow-2xl rounded-3xl">
+        <DialogContent class="max-w-sm sm:max-w-md p-6 overflow-hidden text-center border-0 outline-none ring-0 bg-white shadow-2xl rounded-3xl">
             <div class="relative py-3 flex flex-col items-center">
-                <!-- Glowing Cold / Frosty Backdrop Halo -->
+                <!-- Glowing Backdrop Halo -->
                 <div class="relative flex items-center justify-center w-32 h-32 my-1">
                     <div
                         class="absolute inset-0 rounded-full transition-all duration-700 blur-2xl"
-                        :class="isExtinguished ? 'bg-slate-300/40' : 'bg-orange-400/25 animate-pulse'"
+                        :class="[
+                            modalMode === 'broken' && isExtinguished ? 'bg-slate-300/40' : '',
+                            modalMode === 'reminder' ? 'bg-amber-400/25 animate-pulse' : '',
+                            modalMode === 'broken' && !isExtinguished ? 'bg-orange-400/25 animate-pulse' : '',
+                            modalMode === 'none' ? 'bg-blue-300/30' : '',
+                        ]"
                         aria-hidden="true"
                     ></div>
                     <div
                         class="absolute inset-3 rounded-full transition-all duration-700 blur-lg"
-                        :class="isExtinguished ? 'bg-blue-100/40' : 'bg-amber-300/30'"
+                        :class="[
+                            modalMode === 'broken' && isExtinguished ? 'bg-blue-100/40' : '',
+                            modalMode === 'reminder' ? 'bg-orange-200/30' : '',
+                            modalMode === 'broken' && !isExtinguished ? 'bg-amber-300/30' : '',
+                            modalMode === 'none' ? 'bg-slate-200/40' : '',
+                        ]"
                         aria-hidden="true"
                     ></div>
 
-                    <!-- Rising Smoke Particles when extinguished -->
-                    <div v-if="isExtinguished" class="absolute inset-0 pointer-events-none" aria-hidden="true">
+                    <!-- Rising Smoke Particles when extinguished in broken mode -->
+                    <div v-if="modalMode === 'broken' && isExtinguished" class="absolute inset-0 pointer-events-none" aria-hidden="true">
                         <span class="smoke-puff smoke-puff-1">💨</span>
                         <span class="smoke-puff smoke-puff-2">🌫️</span>
                         <span class="smoke-puff smoke-puff-3">💨</span>
                     </div>
 
-                    <!-- Flame Image Container with Crack and Extinguish Effects -->
+                    <!-- Flame Image Container -->
                     <div class="relative w-24 h-24 flex items-center justify-center">
                         <img
                             :src="isExtinguished ? '/images/ui/not streak.png' : '/images/ui/streak.png'"
-                            alt="Streak Terputus"
+                            alt="Status Streak"
                             class="relative w-24 h-24 object-contain transition-all duration-500"
                             :class="[
                                 isCracking && !isExtinguished ? 'streak-crack-shiver' : '',
-                                isExtinguished ? 'streak-extinguished-pop' : '',
+                                modalMode === 'broken' && isExtinguished ? 'streak-extinguished-pop' : '',
+                                modalMode === 'reminder' ? 'streak-reminder-float' : '',
                             ]"
                         />
 
-                        <!-- SVG Crack line overlaid while cracking -->
+                        <!-- SVG Crack line overlaid while cracking (only in broken mode) -->
                         <svg
-                            v-if="isCracking && !isExtinguished"
+                            v-if="modalMode === 'broken' && isCracking && !isExtinguished"
                             class="absolute inset-0 w-full h-full pointer-events-none crack-svg-line"
                             viewBox="0 0 100 100"
                             fill="none"
@@ -220,8 +274,9 @@ onBeforeUnmount(() => {
                     </div>
                 </div>
 
-                <!-- Replay Animation Button -->
+                <!-- Replay Animation Button (only shown in broken mode) -->
                 <button
+                    v-if="modalMode === 'broken'"
                     type="button"
                     class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-slate-600 transition-colors mt-1 mb-2 px-2.5 py-0.5 rounded-full hover:bg-slate-100"
                     @click="startExtinguishAnimation"
@@ -231,9 +286,14 @@ onBeforeUnmount(() => {
                     <span>Putar Ulang Efek</span>
                 </button>
 
+                <!-- Small spacer for reminder mode -->
+                <div v-else class="h-2"></div>
+
                 <DialogHeader class="items-center text-center space-y-2.5">
                     <!-- Status Tag -->
+                    <!-- 1. Broken Mode Status Tag -->
                     <div
+                        v-if="modalMode === 'broken'"
                         class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase transition-all duration-300"
                         :class="isExtinguished ? 'bg-slate-100 border border-slate-200 text-slate-700' : 'bg-orange-100 border border-orange-200 text-orange-700'"
                     >
@@ -242,14 +302,40 @@ onBeforeUnmount(() => {
                         <span>{{ isExtinguished ? 'Streak Terputus' : 'Memeriksa Api...' }}</span>
                     </div>
 
-                    <!-- Dynamic Title & Falling Streak Number -->
+                    <!-- 2. Reminder Mode Status Tag (Streak Mati Hari Ini, Belum Reset ke 0) -->
+                    <div
+                        v-else-if="modalMode === 'reminder'"
+                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-wide bg-amber-100 border border-amber-200 text-amber-800"
+                    >
+                        <PhHourglass :size="15" weight="bold" class="text-amber-600 animate-spin" style="animation-duration: 4s;" />
+                        <span>Api Belum Dinyalakan Hari Ini</span>
+                    </div>
+
+                    <!-- 3. None Mode Status Tag (Belum Ada Streak) -->
+                    <div
+                        v-else
+                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-wide bg-blue-100 border border-blue-200 text-blue-800"
+                    >
+                        <PhSparkle :size="15" weight="bold" class="text-blue-600" />
+                        <span>Mulai Streak Pertamamu</span>
+                    </div>
+
+                    <!-- Dynamic Title & Streak Number -->
                     <div class="space-y-1">
-                        <DialogTitle class="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
+                        <!-- Titles -->
+                        <DialogTitle v-if="modalMode === 'broken'" class="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
                             Yah, Api Belajarmu Padam!
                         </DialogTitle>
-                        
-                        <!-- Animated Drop from Previous Streak to 0 -->
-                        <div class="flex items-center justify-center gap-2 pt-1">
+                        <DialogTitle v-else-if="modalMode === 'reminder'" class="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
+                            Yuk, Nyalakan Apimu Hari Ini!
+                        </DialogTitle>
+                        <DialogTitle v-else class="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
+                            Nyalakan Api Belajarmu!
+                        </DialogTitle>
+
+                        <!-- Number Displays -->
+                        <!-- Broken Mode: Drops to 0 -->
+                        <div v-if="modalMode === 'broken'" class="flex items-center justify-center gap-2 pt-1">
                             <span
                                 v-if="!isExtinguished"
                                 class="text-xl font-black text-orange-600 transition-all duration-300 inline-block scale-110"
@@ -269,18 +355,51 @@ onBeforeUnmount(() => {
                                 (kemarin: {{ previousStreak }} hari)
                             </span>
                         </div>
+
+                        <!-- Reminder Mode: KEPT INTACT (TIDAK RESET KE 0!) -->
+                        <div v-else-if="modalMode === 'reminder'" class="flex items-center justify-center gap-2 pt-1">
+                            <span class="text-xl font-black text-amber-600 inline-block">
+                                🔥 {{ currentDisplayCount }} Hari
+                            </span>
+                            <span class="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                                Masih Tersimpan!
+                            </span>
+                        </div>
+
+                        <!-- None Mode -->
+                        <div v-else class="flex items-center justify-center gap-2 pt-1">
+                            <span class="text-xl font-black text-slate-500 inline-block">
+                                🌱 0 Hari Streak
+                            </span>
+                        </div>
                     </div>
 
-                    <DialogDescription class="text-sm text-gray-600 font-medium max-w-xs mx-auto leading-relaxed pt-1">
+                    <!-- Descriptions -->
+                    <!-- Broken Mode Description -->
+                    <DialogDescription v-if="modalMode === 'broken'" class="text-sm text-gray-600 font-medium max-w-xs mx-auto leading-relaxed pt-1">
                         Kamu tidak sempat belajar kemarin, jadi apimu harus dimulai kembali dari awal. Tapi jangan khawatir, juara sejati selalu bangkit lagi! 💪
+                    </DialogDescription>
+
+                    <!-- Reminder Mode Description: Explains streak is not reset today, but will reset if left untouched all day -->
+                    <DialogDescription v-else-if="modalMode === 'reminder'" class="text-sm text-gray-600 font-medium max-w-xs mx-auto leading-relaxed pt-1">
+                        Streak kamu masih aman! Selesaikan minimal 1 materi atau latihan hari ini agar apimu kembali menyala dan streak berlanjut menjadi <strong>{{ currentDisplayCount + 1 }} hari</strong>.
+                    </DialogDescription>
+
+                    <!-- None Mode Description -->
+                    <DialogDescription v-else class="text-sm text-gray-600 font-medium max-w-xs mx-auto leading-relaxed pt-1">
+                        Selesaikan 1 materi atau latihan pertamamu hari ini untuk menyalakan api belajarmu dan mulai mengumpulkan streak!
                     </DialogDescription>
                 </DialogHeader>
 
                 <!-- Statistics Box -->
                 <div class="w-full mt-4 p-3 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-around text-xs">
                     <div class="text-center">
-                        <span class="block text-slate-400 font-medium">Streak Terakhir</span>
-                        <strong class="text-slate-700 text-sm font-bold">{{ previousStreak }} Hari</strong>
+                        <span class="block text-slate-400 font-medium">
+                            {{ modalMode === 'reminder' ? 'Streak Saat Ini' : 'Streak Terakhir' }}
+                        </span>
+                        <strong class="text-slate-700 text-sm font-bold">
+                            {{ modalMode === 'reminder' ? currentStreak : previousStreak }} Hari
+                        </strong>
                     </div>
                     <div class="w-px h-7 bg-slate-200" aria-hidden="true"></div>
                     <div class="text-center">
@@ -292,19 +411,30 @@ onBeforeUnmount(() => {
                     </div>
                 </div>
 
-                <!-- Motivation Encouragement Note -->
-                <div class="mt-3.5 px-3.5 py-2 rounded-xl bg-orange-50/80 border border-orange-100 text-xs text-orange-800 font-medium leading-relaxed">
+                <!-- Motivation / Rule Explanation Note -->
+                <!-- Broken Mode Note -->
+                <div v-if="modalMode === 'broken'" class="mt-3.5 px-3.5 py-2 rounded-xl bg-orange-50 border border-orange-100 text-xs text-orange-800 font-medium leading-relaxed">
                     🌟 <strong>Tips:</strong> Cukup selesaikan 1 materi atau latihan hari ini untuk langsung <strong>menyalakan kembali api belajarmu!</strong>
+                </div>
+
+                <!-- Reminder Mode Note: CLEAR RULE OF STREAK RESET -->
+                <div v-else-if="modalMode === 'reminder'" class="mt-3.5 px-3.5 py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 font-medium leading-relaxed text-left">
+                    ⏳ <strong>Aturan Streak:</strong> Apimu mati karena belum ada aktivitas hari ini. Jika hari ini kamu biarkan sampai besok tanpa belajar, barulah streak-mu akan <strong>reset ke 0</strong>!
+                </div>
+
+                <!-- None Mode Note -->
+                <div v-else class="mt-3.5 px-3.5 py-2 rounded-xl bg-blue-50 border border-blue-100 text-xs text-blue-800 font-medium leading-relaxed">
+                    🚀 <strong>Ayo Mulai:</strong> Belajar sedikit setiap hari lebih baik daripada belajar banyak sekaligus!
                 </div>
 
                 <!-- Action Button -->
                 <div class="w-full mt-5">
                     <Button
                         type="button"
-                        class="w-full py-6 text-base font-bold text-white shadow-lg shadow-orange-500/25 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-600 rounded-2xl transition-all duration-200 hover:shadow-orange-500/40 transform active:scale-[0.98]"
+                        class="w-full py-6 text-base font-bold text-white shadow-md shadow-orange-500/20 bg-orange-500 hover:bg-orange-600 rounded-2xl transition-all duration-200 hover:shadow-orange-500/30 transform active:scale-[0.98]"
                         @click="handleStartLearning"
                     >
-                        Ayo Nyalakan Lagi Sekarang! 🔥
+                        {{ modalMode === 'reminder' ? 'Ayo Belajar & Nyalakan Api! 🔥' : 'Ayo Nyalakan Lagi Sekarang! 🔥' }}
                     </Button>
                 </div>
             </div>
@@ -338,6 +468,16 @@ onBeforeUnmount(() => {
 
 .streak-extinguished-pop {
     animation: streak-extinguished-pop 0.55s ease-out forwards;
+}
+
+/* Reminder Gentle Float */
+@keyframes streak-reminder-float {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-4px) scale(1.03); }
+}
+
+.streak-reminder-float {
+    animation: streak-reminder-float 2.5s ease-in-out infinite;
 }
 
 /* Crack Line Animation */

@@ -11,6 +11,7 @@ use App\Models\StudentStreak;
 use App\Models\Subject;
 use App\Models\Unit;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -288,5 +289,47 @@ class StreakTest extends TestCase
             ->where('auth.streak_broken.previous_streak', 5)
             ->where('auth.streak_broken.longest_streak', 7)
         );
+    }
+
+    public function test_streak_remains_intact_on_day_after_and_only_resets_to_zero_after_second_missed_day(): void
+    {
+        [$user, $student] = $this->createChildUser();
+        $unit = $this->createUnit();
+
+        // 19 Oktober: anak mengerjakan 1 soal
+        $october19 = now()->startOfDay();
+        Carbon::setTestNow($october19);
+
+        $this->actingAs($user)->post(route('progress.units.complete', ['unit' => $unit->id]));
+
+        $streak = StudentStreak::where('student_id', $student->id)->first();
+        $this->assertEquals(1, $streak->active_streak);
+        $this->assertTrue($streak->is_active_today);
+        $this->assertFalse($streak->is_inactive_today);
+        $this->assertFalse($streak->is_broken);
+
+        // 20 Oktober: streak mati (belum dikerjakan hari ini), TAPI TIDAK RESET KE 0!
+        $october20 = $october19->copy()->addDay();
+        Carbon::setTestNow($october20);
+
+        $streak->refresh();
+        $this->assertEquals(1, $streak->active_streak, 'Streak pada 20 Oktober harus tetap 1, tidak boleh reset ke 0!');
+        $this->assertFalse($streak->is_active_today, 'Streak pada 20 Oktober harus mati (belum aktif hari ini).');
+        $this->assertTrue($streak->is_inactive_today, 'Streak pada 20 Oktober dalam status mati sementara tapi tersimpan.');
+        $this->assertFalse($streak->is_broken, 'Streak pada 20 Oktober tidak boleh dianggap terputus/broken!');
+
+        // 21 Oktober: streak mati didiamkan lagi satu hari penuh (tidak dihidupkan pada 20 Oktober).
+        // Barulah pada 21 Oktober ini streak RESET KE 0!
+        $october21 = $october19->copy()->addDays(2);
+        Carbon::setTestNow($october21);
+
+        $streak->refresh();
+        $this->assertEquals(0, $streak->active_streak, 'Streak pada 21 Oktober harus reset ke 0 setelah didiamkan sehari!');
+        $this->assertFalse($streak->is_active_today);
+        $this->assertFalse($streak->is_inactive_today);
+        $this->assertTrue($streak->is_broken, 'Streak pada 21 Oktober harus terdeteksi broken.');
+        $this->assertEquals(1, $streak->broken_streak_count, 'Rekor streak yang patah adalah 1 hari.');
+
+        Carbon::setTestNow(null);
     }
 }

@@ -47,8 +47,36 @@ class ParentDashboardController extends Controller
             $avatar = strtoupper(substr($words[0] ?? 'A', 0, 1).(isset($words[1]) ? substr($words[1], 0, 1) : ''));
 
             $lastCompleted = $completedUnits->sortByDesc('completed_at')->first();
-            $lastActivity = $lastCompleted?->unit?->title
-                ? 'Menyelesaikan '.$lastCompleted->unit->title
+            $lastActivityDetails = null;
+
+            if ($lastCompleted && $lastCompleted->unit) {
+                $unit = $lastCompleted->unit;
+                $chapter = $unit->chapter;
+                $level = $chapter?->level;
+                $classes = $level?->classes;
+                $subject = $classes?->subject;
+
+                $lastActivityDetails = [
+                    'subject' => $subject?->title,
+                    'chapterNumber' => $chapter?->number,
+                    'chapterTitle' => $chapter?->title,
+                    'levelNumber' => $level?->number,
+                    'levelTitle' => $level?->title,
+                    'unitOrder' => $unit->order,
+                    'unitTitle' => $unit->title,
+                    'timeAgo' => $lastCompleted->completed_at
+                        ? $lastCompleted->completed_at->locale('id')->diffForHumans()
+                        : 'Baru saja',
+                    'completedAt' => $lastCompleted->completed_at
+                        ? $lastCompleted->completed_at->translatedFormat('d M Y, H:i')
+                        : null,
+                ];
+            }
+
+            $lastActivity = $lastActivityDetails
+                ? ($lastActivityDetails['subject'] ? $lastActivityDetails['subject'].' • ' : '')
+                    .($lastActivityDetails['chapterNumber'] ? 'Chapter '.$lastActivityDetails['chapterNumber'].' ' : '')
+                    .'(Unit '.$lastActivityDetails['unitOrder'].'): '.$lastActivityDetails['unitTitle']
                 : 'Belum ada aktivitas belajar';
 
             $classTitle = $lastCompleted?->unit?->chapter?->level?->classes?->title ?? 'Siswa Aktif';
@@ -86,6 +114,7 @@ class ParentDashboardController extends Controller
                 'streak' => $child->streak?->active_streak ?? 0,
                 'streakActiveToday' => $child->streak?->is_active_today ?? false,
                 'lastActivity' => $lastActivity,
+                'lastActivityDetails' => $lastActivityDetails,
                 'subjects' => $subjectsProgress,
             ];
         })->values()->all();

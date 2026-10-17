@@ -118,7 +118,7 @@ const handleRegenerate = () => {
                                 <p class="text-black">{{ isRegenerating ? 'Membuat...' : 'Buat Kode Baru' }}</p>
                             </Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent class="border-0 ring-0 shadow-2xl outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0">
+                        <AlertDialogContent class="border-0 ring-0 shadow-2xl outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 bg-white">
                             <AlertDialogHeader>
                                 <AlertDialogTitle class="text-lg font-bold">
                                     Buat Kode Hubung Baru?

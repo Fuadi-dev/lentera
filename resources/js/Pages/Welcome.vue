@@ -4,8 +4,10 @@ import { Head, Link } from '@inertiajs/vue3';
 import { Accessibility, BookOpen, Home, Sparkles, TrendingUp } from 'lucide-vue-next';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent } from '@/Components/ui/card';
+import { animate, inView, stagger } from 'motion';
 import Footer from '@/Components/Footer.vue';
 import Faq from '@/Components/Faq.vue';
+import Panduan from '@/Components/Panduan.vue';
 import LoginIcon from '@/Components/LoginIcon.vue';
 
 defineProps({
@@ -25,6 +27,7 @@ defineProps({
 
 const isMobileMenuOpen = ref(false);
 const isScrolled = ref(false);
+let stopInViews = [];
 
 const handleScroll = () => {
     isScrolled.value = window.scrollY > 8;
@@ -33,18 +36,156 @@ const handleScroll = () => {
 onMounted(() => {
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        return;
+    }
+
+    const easeOut = [0.16, 1, 0.3, 1];
+
+    // Initial state for scroll-triggered elements below the fold
+    const initialHidden = document.querySelectorAll(
+        '.tentang-text, .tentang-mascot, .fitur-header, .fitur-card, .panduan-header, .panduan-card, .faq-header, .faq-item, .footer-content'
+    );
+    initialHidden.forEach((el) => {
+        el.style.opacity = '0';
+    });
+
+    // 1. Tentang Section: Triggers when the content grid itself enters view
+    stopInViews.push(
+        inView(
+            '.tentang-grid',
+            () => {
+                animate('.tentang-text', { opacity: [0, 1], x: [-36, 0] }, { duration: 0.9, ease: easeOut });
+                animate(
+                    '.tentang-mascot',
+                    { opacity: [0, 1], x: [36, 0], scale: [0.93, 1] },
+                    { duration: 0.9, delay: 0.15, ease: easeOut }
+                );
+            },
+            { margin: '0px 0px -100px 0px' }
+        )
+    );
+
+    // 2. Fitur Section: Header and cards triggered independently
+    stopInViews.push(
+        inView(
+            '.fitur-header',
+            () => {
+                animate('.fitur-header', { opacity: [0, 1], y: [24, 0] }, { duration: 0.75, ease: easeOut });
+            },
+            { margin: '0px 0px -80px 0px' }
+        )
+    );
+
+    stopInViews.push(
+        inView(
+            '.fitur-grid',
+            () => {
+                const anim = animate(
+                    '.fitur-card',
+                    { opacity: [0, 1], y: [36, 0] },
+                    {
+                        delay: stagger(0.12, { startDelay: 0.05 }),
+                        duration: 0.9,
+                        ease: easeOut,
+                    }
+                );
+                anim.finished.then(() => {
+                    document.querySelectorAll('.fitur-card').forEach((el) => (el.style.transform = ''));
+                });
+            },
+            { margin: '0px 0px -100px 0px' }
+        )
+    );
+
+    // 3. Panduan Section: Header and cards triggered when actually in viewport
+    stopInViews.push(
+        inView(
+            '.panduan-header',
+            () => {
+                animate('.panduan-header', { opacity: [0, 1], y: [24, 0] }, { duration: 0.75, ease: easeOut });
+            },
+            { margin: '0px 0px -80px 0px' }
+        )
+    );
+
+    stopInViews.push(
+        inView(
+            '.panduan-grid',
+            () => {
+                const anim = animate(
+                    '.panduan-card',
+                    { opacity: [0, 1], y: [36, 0] },
+                    {
+                        delay: stagger(0.12, { startDelay: 0.05 }),
+                        duration: 0.9,
+                        ease: easeOut,
+                    }
+                );
+                anim.finished.then(() => {
+                    document.querySelectorAll('.panduan-card').forEach((el) => (el.style.transform = ''));
+                });
+            },
+            { margin: '0px 0px -100px 0px' }
+        )
+    );
+
+    // 4. FAQ Section: Header and accordion list
+    stopInViews.push(
+        inView(
+            '.faq-header',
+            () => {
+                animate('.faq-header', { opacity: [0, 1], y: [24, 0] }, { duration: 0.75, ease: easeOut });
+            },
+            { margin: '0px 0px -80px 0px' }
+        )
+    );
+
+    stopInViews.push(
+        inView(
+            '.faq-list',
+            () => {
+                animate(
+                    '.faq-item',
+                    { opacity: [0, 1], y: [24, 0] },
+                    {
+                        delay: stagger(0.08, { startDelay: 0.05 }),
+                        duration: 0.8,
+                        ease: easeOut,
+                    }
+                );
+            },
+            { margin: '0px 0px -100px 0px' }
+        )
+    );
+
+    // 5. Footer: Triggered when reaching bottom
+    stopInViews.push(
+        inView(
+            '.footer-content',
+            () => {
+                animate('.footer-content', { opacity: [0, 1], y: [24, 0] }, { duration: 0.85, ease: easeOut });
+            },
+            { margin: '0px 0px -60px 0px' }
+        )
+    );
 });
 
 onUnmounted(() => {
     window.removeEventListener('scroll', handleScroll);
+    stopInViews.forEach((stop) => {
+        if (typeof stop === 'function') stop();
+    });
+    stopInViews = [];
 });
 
 const navLinks = [
     { label: 'Beranda', href: '#beranda' },
     { label: 'Tentang', href: '#tentang' },
     { label: 'Fitur', href: '#fitur' },
-    { label: 'FAQ', href: '#faq' },
     { label: 'Panduan', href: '#panduan' },
+    { label: 'FAQ', href: '#faq' },
 ];
 
 const features = [
@@ -245,8 +386,8 @@ const features = [
 
     <section id="tentang" class="py-20 bg-background sm:py-24">
         <div class="w-full max-w-6xl px-4 mx-auto sm:px-6">
-            <div class="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
-                <div>
+            <div class="tentang-grid grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
+                <div class="tentang-text">
                     <p class="text-sm font-semibold tracking-wide uppercase text-primary">
                         Tentang Lentera
                     </p>
@@ -264,7 +405,7 @@ const features = [
                     </p>
                 </div>
 
-                <div class="relative flex items-end justify-center min-h-80">
+                <div class="tentang-mascot relative flex items-end justify-center min-h-80">
                     <div
                         class="absolute top-0 right-0 z-20 max-w-[15rem] rounded-2xl rounded-bl-sm bg-primary px-5 py-4 text-lg font-semibold text-primary-foreground shadow-lg sm:right-4 sm:translate-x-14"
                     >
@@ -282,7 +423,7 @@ const features = [
 
     <section id="fitur" class="py-20 bg-white sm:py-24">
         <div class="w-full max-w-6xl px-4 mx-auto sm:px-6">
-            <div class="max-w-2xl">
+            <div class="fitur-header max-w-2xl">
                 <p class="text-sm font-semibold tracking-wide uppercase text-primary">
                     Fitur Lentera
                 </p>
@@ -293,12 +434,12 @@ const features = [
                 </h2>
             </div>
 
-            <div class="grid gap-5 mt-12 md:grid-cols-3 md:auto-rows-[15rem]">
+            <div class="fitur-grid grid gap-5 mt-12 md:grid-cols-3 md:auto-rows-[15rem]">
                 <Card
                     v-for="feature in features"
                     :key="feature.title"
                     :class="[
-                        'group relative min-h-[15rem] overflow-hidden rounded-2xl border border-border bg-muted/30 shadow-none transition-colors hover:border-primary/40',
+                        'fitur-card group relative min-h-[15rem] overflow-hidden rounded-2xl border border-border bg-muted/30 shadow-none transition-colors hover:border-primary/40',
                         feature.class,
                     ]"
                 >
@@ -325,6 +466,8 @@ const features = [
             </div>
         </div>
     </section>
+
+    <Panduan />
 
     <Faq />
     <Footer />

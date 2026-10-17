@@ -10,6 +10,7 @@ import {
 import { PhCheck, PhX } from '@phosphor-icons/vue';
 import NextMaterialButton from '@/Components/Course/NextMaterialButton.vue';
 import MarkUnitDoneButton from '@/Components/Course/MarkUnitDoneButton.vue';
+import Button from '@/Components/ui/button/Button.vue';
 import { useStreakActivity } from '@/Composables/useStreakActivity';
 
 const props = defineProps({
@@ -239,14 +240,15 @@ onBeforeUnmount(() => {
 
         <div v-if="currentQuestion" class="space-y-5">
             <div class="flex flex-wrap items-center justify-end gap-3">
-                <button
+                <Button
                     type="button"
-                    class="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-semibold hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    variant="outline"
+                    class="gap-2 rounded-xl font-semibold border-slate-200 text-slate-700 hover:text-slate-900 hover:bg-slate-50 cursor-pointer"
                     @click="speakQuestion"
                 >
-                    <Headphones :size="17" aria-hidden="true" />
-                    Dengarkan Soal
-                </button>
+                    <Headphones :size="17" class="text-primary shrink-0" aria-hidden="true" />
+                    <span>Dengarkan Soal</span>
+                </Button>
             </div>
 
             <div class="flex items-start gap-3">
@@ -337,7 +339,7 @@ onBeforeUnmount(() => {
                     type="text"
                     inputmode="numeric"
                     autocomplete="off"
-                    class="w-full rounded-xl border-2 border-border bg-background px-4 py-4 text-xl font-bold text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30"
+                    class="w-full rounded-xl border-2 border-border bg-background px-4 py-4 text-xl font-bold text-foreground outline-none transition focus:border-primary focus:ring-0 focus:outline-none"
                     :aria-label="`Jawaban untuk ${currentQuestion.question}`"
                     :disabled="answerState === 'correct'"
                     @keyup.enter="submitTextAnswer"
@@ -395,7 +397,7 @@ onBeforeUnmount(() => {
             Aktivitas ini belum memiliki pertanyaan.
         </div>
 
-        <div class="flex justify-between">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pt-6 mt-6 border-t border-slate-100">
             <MarkUnitDoneButton :unit-id="unit.id" :completed="props.completed || completed || unitMarkedDone" />
             <NextMaterialButton v-if="nextUnitHref" :href="nextUnitHref" :title="nextUnitTitle" />
         </div>

@@ -36,9 +36,9 @@ const frequentlyAskedQuestions = [
 </script>
 
 <template>
-    <section id="faq" class="py-20 bg-background sm:py-24">
+    <section id="faq" class="py-20 bg-white sm:py-24">
         <div class="w-full max-w-3xl px-4 mx-auto sm:px-6">
-            <div class="text-center">
+            <div class="text-center faq-header">
                 <p class="text-sm font-semibold tracking-wide uppercase text-primary">FAQ</p>
                 <h2
                     class="mt-3 text-3xl font-bold leading-tight tracking-tight text-foreground sm:text-4xl"
@@ -51,12 +51,12 @@ const frequentlyAskedQuestions = [
                 </p>
             </div>
 
-            <Accordion type="single" collapsible class="mt-10">
+            <Accordion type="single" collapsible class="faq-list mt-10">
                 <AccordionItem
                     v-for="(item, index) in frequentlyAskedQuestions"
                     :key="item.question"
                     :value="`faq-${index}`"
-                    class="border-border"
+                    class="faq-item border-border"
                 >
                     <AccordionTrigger class="py-5 text-base font-semibold text-foreground">
                         {{ item.question }}

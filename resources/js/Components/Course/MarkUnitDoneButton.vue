@@ -35,10 +35,10 @@ function markAsDone() {
         type="button"
         :variant="completed ? 'default' : 'outline'"
         :class="[
-            'gap-2 transition-all duration-300',
+            'gap-2 font-semibold transition-all duration-300 rounded-xl px-4 py-2.5 shrink-0',
             completed
-                ? 'bg-green-600 hover:bg-green-700 text-white border-green-600'
-                : '!text-black border-border hover:border-green-500 hover:!text-green-600',
+                ? 'bg-green-600 hover:bg-green-700 text-white border-green-600 shadow-sm'
+                : 'text-slate-700 border-slate-200 hover:border-green-500 hover:text-green-600 hover:bg-green-50/50',
         ]"
         :disabled="completed || loading"
         @click="markAsDone"
@@ -47,15 +47,16 @@ function markAsDone() {
             v-if="completed"
             :size="18"
             weight="fill"
-            class="animate-[scale-in_300ms_ease-out]"
+            class="animate-[scale-in_300ms_ease-out] text-white shrink-0"
             aria-hidden="true"
         />
         <PhCircle
             v-else
             :size="18"
+            class="shrink-0"
             aria-hidden="true"
         />
-        <p :class="completed ? '!text-white' : '!text-black'">{{ completed ? 'Sudah selesai' : loading ? 'Menyimpan...' : 'Tandai selesai' }}</p>
+        <span>{{ completed ? 'Sudah selesai' : loading ? 'Menyimpan...' : 'Tandai selesai' }}</span>
     </Button>
 </template>
 

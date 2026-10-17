@@ -47,6 +47,22 @@ class StudentStreak extends Model
         return Carbon::parse($this->last_activity_date)->startOfDay()->equalTo(now()->startOfDay());
     }
 
+    /**
+     * Check if the streak is inactive today (flame off / not streak.png),
+     * but NOT reset to 0 yet. The student still has today to practice and keep the streak alive.
+     */
+    public function getIsInactiveTodayAttribute(): bool
+    {
+        if (! $this->last_activity_date || (int) $this->current_streak <= 0) {
+            return false;
+        }
+
+        $lastActivity = Carbon::parse($this->last_activity_date)->startOfDay();
+        $today = now()->startOfDay();
+
+        return $lastActivity->equalTo($today->copy()->subDay());
+    }
+
     public function getIsBrokenAttribute(): bool
     {
         if (! $this->last_activity_date || (int) $this->current_streak <= 0) {

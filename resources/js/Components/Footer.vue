@@ -17,7 +17,7 @@ const currentYear = new Date().getFullYear();
 
 <template>
     <footer class="text-gray-900 border-t bg-background">
-        <div class="w-full max-w-6xl px-4 mx-auto py-14 sm:px-6 sm:py-16">
+        <div class="footer-content w-full max-w-6xl px-4 mx-auto py-14 sm:px-6 sm:py-16">
             <div class="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
                 <div class="max-w-xs">
                     <a href="#beranda" aria-label="Kembali ke Beranda Lentera">

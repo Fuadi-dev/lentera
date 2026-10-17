@@ -6,10 +6,16 @@ import QuestionMaterial from '@/Components/Course/QuestionMaterial.vue';
 import QuizActivity from '@/Components/Course/QuizActivity.vue';
 import TextMaterial from '@/Components/Course/TextMaterial.vue';
 import VideoMaterial from '@/Components/Course/VideoMaterial.vue';
-import NextMaterialButton from '@/Components/Course/NextMaterialButton.vue';
 import { Head, Link } from '@inertiajs/vue3';
-import { PhArrowLeft } from '@phosphor-icons/vue';
-import { SidebarProvider } from '@/Components/ui/sidebar';
+import { PhArrowLeft, PhList } from '@phosphor-icons/vue';
+import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from '@/Components/ui/sheet';
 
 const props = defineProps({
     course: { type: Object, required: true },
@@ -19,7 +25,7 @@ const props = defineProps({
     completedUnitIds: { type: Array, default: () => [] },
 });
 
-const sidebarOpen = ref(true);
+const sidebarOpen = ref(false);
 const quizCompleted = ref(null);
 
 const chapterUnits = computed(() => {
@@ -70,19 +76,47 @@ const nextUnitHref = computed(() =>
 function handleQuizCompleted(result) {
     quizCompleted.value = result;
 }
-
-console.log("kuis komplete su", props.isCompleted)
 </script>
 
 <template>
     <Head :title="`${material.title} - ${course.title}`" />
 
     <AuthenticatedLayout>
-        <div class="px-4 pt-6 pb-12 sm:px-6 lg:px-8">
-            <div class="max-w-[76rem] mx-auto space-y-6">
-                <header
-                    class="flex items-center gap-3 px-4 pt-6 pb-12 border-b border-border h-14 shrink-0"
+        <!-- Floating Sidebar Button (Sejajar dengan Accessibility Settings di Kiri Atas) -->
+        <Sheet v-model:open="sidebarOpen">
+            <SheetTrigger as-child>
+                <button
+                    type="button"
+                    class="fixed left-0 z-30 flex items-center justify-center text-white transition bg-orange-600 rounded-r-full shadow-lg top-36 sm:top-20 size-12 hover:bg-orange-700 focus:outline-none focus:ring-4 focus:ring-orange-200 cursor-pointer"
+                    aria-label="Buka daftar materi"
+                    title="Daftar Materi Pembelajaran"
                 >
+                    <PhList :size="24" weight="bold" aria-hidden="true" />
+                </button>
+            </SheetTrigger>
+
+            <SheetContent
+                side="left"
+                class="w-[85vw] sm:w-96 max-w-sm p-0 bg-white border-0 outline-none ring-0 shadow-2xl flex flex-col h-full"
+            >
+                <SheetHeader class="sr-only">
+                    <SheetTitle>Daftar Materi Pembelajaran</SheetTitle>
+                    <SheetDescription>Daftar bab dan unit materi pelajaran</SheetDescription>
+                </SheetHeader>
+                <CourseMaterialSidebar
+                    :course="course"
+                    :class-number="classNumber"
+                    :material="material"
+                    :completed-unit-ids="completedUnitIds"
+                    @select-unit="sidebarOpen = false"
+                />
+            </SheetContent>
+        </Sheet>
+
+        <div class="px-4 pt-6 pb-16 sm:px-6 lg:px-8">
+            <div class="max-w-4xl mx-auto space-y-6">
+                <!-- Header Breadcrumb & Back -->
+                <header class="flex items-center gap-3 pb-4 border-b border-border/60">
                     <Link
                         :href="
                             route('courses.learning-path', {
@@ -90,72 +124,61 @@ console.log("kuis komplete su", props.isCompleted)
                                 class: classNumber,
                             })
                         "
-                        class="inline-flex items-center justify-center rounded-md w-9 h-9 text-muted-foreground hover:bg-muted hover:text-foreground"
+                        class="inline-flex items-center justify-center rounded-xl size-10 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0"
                         aria-label="Kembali ke jalur belajar"
+                        title="Kembali ke jalur belajar"
                     >
-                        <PhArrowLeft :size="18" aria-hidden="true" />
+                        <PhArrowLeft :size="20" weight="bold" aria-hidden="true" />
                     </Link>
                     <div class="min-w-0">
-                        <p class="text-sm truncate text-muted-foreground">{{ course.title }}</p>
-                        <h2 class="font-bold truncate text-foreground">{{ material.title }}</h2>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{{ course.title }}</p>
+                        <h1 class="text-lg sm:text-xl font-bold truncate text-foreground">{{ material.title }}</h1>
                     </div>
                 </header>
 
-                <div class="relative">
-                    <SidebarProvider v-model:open="sidebarOpen" class="w-full min-h-0">
-                        <CourseMaterialSidebar
-                            :course="course"
-                            :class-number="classNumber"
-                            :material="material"
-                            :completed-unit-ids="completedUnitIds"
+                <!-- Main Material Card Container -->
+                <main class="w-full">
+                    <TextMaterial
+                        v-if="material.type === 'text'"
+                        :course="course"
+                        :class-number="classNumber"
+                        :material="material"
+                        :next-unit-href="nextUnitHref"
+                        :next-unit-title="nextUnit?.unit.title"
+                        :completed="isCompleted"
+                    />
+                    <VideoMaterial
+                        v-else-if="material.type === 'video'"
+                        :material="material"
+                        :next-unit-href="nextUnitHref"
+                        :next-unit-title="nextUnit?.unit.title"
+                        :completed="isCompleted"
+                    />
+                    <QuestionMaterial
+                        v-else-if="material.type === 'question'"
+                        :material="material"
+                        :next-unit-href="nextUnitHref"
+                        :next-unit-title="nextUnit?.unit.title"
+                        :completed="isCompleted"
+                    />
+                    <template v-else-if="material.type === 'quiz'">
+                        <QuizActivity
+                            :unit="material"
+                            :chapter-units="chapterUnits"
+                            :next-unit-href="nextUnitHref"
+                            :next-unit-title="nextUnit?.unit.title"
+                            :completed="isCompleted"
+                            @completed="handleQuizCompleted"
                         />
-
-                        <main class="flex-1 w-full min-w-0">
-                            <div class="px-4">
-                                <TextMaterial
-                                    v-if="material.type === 'text'"
-                                    :course="course"
-                                    :class-number="classNumber"
-                                    :material="material"
-                                    :next-unit-href="nextUnitHref"
-                                    :next-unit-title="nextUnit?.unit.title"
-                                    :completed="isCompleted"
-                                />
-                                <VideoMaterial
-                                    v-else-if="material.type === 'video'"
-                                    :material="material"
-                                    :next-unit-href="nextUnitHref"
-                                    :next-unit-title="nextUnit?.unit.title"
-                                    :completed="isCompleted"
-                                />
-                                <QuestionMaterial
-                                    v-else-if="material.type === 'question'"
-                                    :material="material"
-                                    :next-unit-href="nextUnitHref"
-                                    :next-unit-title="nextUnit?.unit.title"
-                                    :completed="isCompleted"
-                                />
-                                <template v-else-if="material.type === 'quiz'">
-                                    <QuizActivity
-                                        :unit="material"
-                                        :chapter-units="chapterUnits"
-                                        :next-unit-href="nextUnitHref"
-                                        :next-unit-title="nextUnit?.unit.title"
-                                        :completed="isCompleted"
-                                        @completed="handleQuizCompleted"
-                                    />
-                                    <p
-                                        v-if="quizCompleted"
-                                        class="mt-4 text-sm font-semibold text-green-600"
-                                        aria-live="polite"
-                                    >
-                                        Quiz selesai.
-                                    </p>
-                                </template>
-                            </div>
-                        </main>
-                    </SidebarProvider>
-                </div>
+                        <p
+                            v-if="quizCompleted"
+                            class="mt-4 text-sm font-semibold text-green-600"
+                            aria-live="polite"
+                        >
+                            Quiz selesai.
+                        </p>
+                    </template>
+                </main>
             </div>
         </div>
     </AuthenticatedLayout>

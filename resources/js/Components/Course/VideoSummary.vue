@@ -1,6 +1,7 @@
 <script setup>
 import { onBeforeUnmount } from 'vue';
 import { Headphones } from 'lucide-vue-next';
+import Button from '@/Components/ui/button/Button.vue';
 
 const props = defineProps({
     summary: {
@@ -40,14 +41,15 @@ onBeforeUnmount(() => {
             <h3 id="video-summary-heading" class="text-xl font-semibold text-foreground">
                 {{ title }}
             </h3>
-            <button
+            <Button
                 type="button"
-                class="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-semibold hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                variant="outline"
+                class="gap-2 rounded-xl font-semibold border-slate-200 text-slate-700 hover:text-slate-900 hover:bg-slate-50 cursor-pointer"
                 @click="speakText"
             >
-                <Headphones :size="17" aria-hidden="true" />
-                Dengarkan Rangkuman
-            </button>
+                <Headphones :size="17" class="text-primary shrink-0" aria-hidden="true" />
+                <span>Dengarkan Rangkuman</span>
+            </Button>
         </div>
         <p class="mt-3 text-base leading-8 text-justify whitespace-pre-line text-muted-foreground">
             {{ summary }}

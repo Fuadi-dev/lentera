@@ -10,10 +10,10 @@ defineProps({
 </script>
 
 <template>
-    <Button :as-child="true" size="lg" class="px-6 py-3 text-white">
-        <Link :href="href" :aria-label="`Selanjutnya: ${title}`">
+    <Button :as-child="true" class="gap-2 px-5 py-2.5 font-bold rounded-xl text-white shadow-sm shrink-0">
+        <Link :href="href" :aria-label="`Selanjutnya: ${title}`" class="flex items-center gap-2">
             <span>Selanjutnya</span>
-            <PhArrowRight :size="18" aria-hidden="true" />
+            <PhArrowRight :size="18" weight="bold" aria-hidden="true" />
         </Link>
     </Button>
 </template>
