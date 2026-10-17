@@ -106,14 +106,7 @@ function handleInstantAnswer(isCorrect) {
         return;
     }
 
-    // Jawaban benar:
-    if (!isLastQuestion.value) {
-        recordStreakActivity();
-
-        return;
-    }
-
-    // Jawaban benar pada soal terakhir: otomatis tertandai selesai!
+    // Jawaban benar: otomatis tertandai selesai!
     announceCompletion();
 }
 
@@ -168,20 +161,18 @@ function submitTextAnswer() {
         streak.value += 1;
         feedback.value = 'Benar!';
         triggerConfetti();
-    } else {
-        answerState.value = 'incorrect';
-        streak.value = 0;
-        feedback.value = `Belum tepat. ${currentQuestion.value.explanation ?? 'Coba lagi dengan teliti.'}`;
-    }
 
-    if (isCorrect && isLastQuestion.value) {
-        // Jawaban benar pada soal terakhir: otomatis tertandai selesai + streak.
+        // Jawaban benar: otomatis tertandai selesai!
         announceCompletion();
 
         return;
     }
 
-    // Periksa jawaban: benar ataupun salah tetap dihitung untuk streak harian.
+    // Jawaban salah: streak tetap dihitung untuk hari ini jika belum ada aktivitas,
+    // tetapi unit TIDAK ditandai selesai (siswa dapat mencoba lagi).
+    answerState.value = 'incorrect';
+    streak.value = 0;
+    feedback.value = `Belum tepat. ${currentQuestion.value.explanation ?? 'Coba lagi dengan teliti.'}`;
     recordStreakActivity();
 }
 

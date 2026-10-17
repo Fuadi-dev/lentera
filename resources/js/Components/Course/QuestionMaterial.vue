@@ -300,7 +300,7 @@ function handleDragEnd(event) {
                 >
                     {{ submitted && isAnswerCorrect(material) ? 'Benar!' : 'Periksa jawaban' }}
                 </Button>
-                <MarkUnitDoneButton :unit-id="material.id" :completed="completed || unitMarkedDone" />
+                <MarkUnitDoneButton :unit-id="material.id" :completed="props.completed || unitMarkedDone" />
             </div>
             <NextMaterialButton
                 v-if="nextUnitHref"

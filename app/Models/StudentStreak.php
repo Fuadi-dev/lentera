@@ -46,4 +46,21 @@ class StudentStreak extends Model
 
         return Carbon::parse($this->last_activity_date)->startOfDay()->equalTo(now()->startOfDay());
     }
+
+    public function getIsBrokenAttribute(): bool
+    {
+        if (! $this->last_activity_date || (int) $this->current_streak <= 0) {
+            return false;
+        }
+
+        $lastActivity = Carbon::parse($this->last_activity_date)->startOfDay();
+        $today = now()->startOfDay();
+
+        return $lastActivity->lessThan($today->copy()->subDay());
+    }
+
+    public function getBrokenStreakCountAttribute(): int
+    {
+        return $this->is_broken ? (int) $this->current_streak : 0;
+    }
 }

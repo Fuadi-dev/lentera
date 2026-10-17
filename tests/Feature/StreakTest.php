@@ -246,4 +246,47 @@ class StreakTest extends TestCase
             ->where('flash.streak_award.current_streak', 1)
         );
     }
+
+    public function test_streak_model_detects_broken_streak_correctly(): void
+    {
+        [$user, $student] = $this->createChildUser();
+
+        // Streak with last activity 2 days ago
+        $streak = StudentStreak::create([
+            'student_id' => $student->id,
+            'current_streak' => 4,
+            'longest_streak' => 6,
+            'last_activity_date' => now()->subDays(2),
+        ]);
+
+        $this->assertTrue($streak->is_broken);
+        $this->assertEquals(4, $streak->broken_streak_count);
+        $this->assertEquals(0, $streak->active_streak);
+
+        // If activity was yesterday, streak is NOT broken
+        $streak->update(['last_activity_date' => now()->subDay()]);
+        $this->assertFalse($streak->fresh()->is_broken);
+        $this->assertEquals(4, $streak->fresh()->active_streak);
+    }
+
+    public function test_streak_broken_is_shared_via_inertia_auth_props(): void
+    {
+        [$user, $student] = $this->createChildUser();
+
+        StudentStreak::create([
+            'student_id' => $student->id,
+            'current_streak' => 5,
+            'longest_streak' => 7,
+            'last_activity_date' => now()->subDays(3),
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertInertia(fn ($page) => $page
+            ->has('auth.streak_broken')
+            ->where('auth.streak_broken.is_broken', true)
+            ->where('auth.streak_broken.previous_streak', 5)
+            ->where('auth.streak_broken.longest_streak', 7)
+        );
+    }
 }

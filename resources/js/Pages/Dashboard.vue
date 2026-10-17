@@ -1,12 +1,14 @@
 <script setup>
 import { computed, ref } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { PhArrowRight, PhMagnifyingGlass } from '@phosphor-icons/vue';
 import Button from '@/Components/ui/button/Button.vue';
 import Card from '@/Components/ui/card/Card.vue';
 import Input from '@/Components/ui/input/Input.vue';
 import coursesData from '../../../data/courses.json';
+
+const page = usePage();
 
 const props = defineProps({
     courses: {
@@ -27,6 +29,19 @@ const filteredCourses = computed(() => {
             .includes(query)
     );
 });
+
+function handleStreakBadgeClick() {
+    window.dispatchEvent(
+        new CustomEvent('open-streak-broken', {
+            detail: {
+                previous_streak:
+                    page.props.auth?.streak_broken?.previous_streak ||
+                    (page.props.auth?.streak > 0 ? page.props.auth?.streak : 3),
+                longest_streak: page.props.auth?.streak_broken?.longest_streak || 5,
+            },
+        })
+    );
+}
 </script>
 <template>
     <Head title="Beranda" />
@@ -63,17 +78,21 @@ const filteredCourses = computed(() => {
                         </p>
                         <div
                             v-if="$page.props.auth.user?.role === 'child'"
-                            class="inline-flex items-center gap-2 px-3.5 py-1.5 mt-3 border rounded-full text-xs md:text-sm font-bold transition-all duration-300"
+                            class="inline-flex items-center gap-2 px-3.5 py-1.5 mt-3 border rounded-full text-xs md:text-sm font-bold transition-all duration-300 cursor-pointer select-none hover:shadow-md hover:scale-[1.02] active:scale-[0.98]"
                             :class="
                                 $page.props.auth.streak_active_today
                                     ? 'bg-orange-100 border-orange-200 text-orange-700 shadow-sm'
-                                    : 'bg-gray-100 border-gray-200 text-gray-600'
+                                    : 'bg-gray-100 border-gray-200 text-gray-600 hover:bg-gray-200/70'
                             "
+                            @click="handleStreakBadgeClick"
+                            role="button"
+                            tabindex="0"
+                            title="Klik untuk melihat status api belajar"
                         >
                             <img
                                 :src="$page.props.auth.streak_active_today ? '/images/ui/streak.png' : '/images/ui/not streak.png'"
                                 alt="Streak"
-                                class="object-contain w-5 h-5"
+                                class="object-contain w-5 h-5 transition-transform duration-200 group-hover:scale-110"
                             />
                             <span v-if="$page.props.auth.streak_active_today">
                                 {{ $page.props.auth.streak }} Hari Streak Aktif — Sudah Belajar Hari Ini 🔥
