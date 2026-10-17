@@ -31,16 +31,44 @@ const filteredCourses = computed(() => {
 });
 
 function handleStreakBadgeClick() {
-    window.dispatchEvent(
-        new CustomEvent('open-streak-broken', {
-            detail: {
-                previous_streak:
-                    page.props.auth?.streak_broken?.previous_streak ||
-                    (page.props.auth?.streak > 0 ? page.props.auth?.streak : 3),
-                longest_streak: page.props.auth?.streak_broken?.longest_streak || 5,
-            },
-        })
-    );
+    const isToday = page.props.auth?.streak_active_today;
+    const streakCount = Number(page.props.auth?.streak ?? 0);
+    const isBroken = page.props.auth?.streak_broken?.is_broken;
+
+    if (isBroken) {
+        // Streak is genuinely broken (didiamkan kemarin sampai ganti hari, reset ke 0)
+        window.dispatchEvent(
+            new CustomEvent('open-streak-broken', {
+                detail: {
+                    mode: 'broken',
+                    previous_streak: page.props.auth?.streak_broken?.previous_streak || 1,
+                    longest_streak: page.props.auth?.streak_broken?.longest_streak || 1,
+                },
+            })
+        );
+    } else if (streakCount > 0 && !isToday) {
+        // Streak is inactive today (mati), TAPI TIDAK RESET KE 0!
+        window.dispatchEvent(
+            new CustomEvent('open-streak-broken', {
+                detail: {
+                    mode: 'reminder',
+                    current_streak: streakCount,
+                    longest_streak: page.props.auth?.streak_broken?.longest_streak || streakCount,
+                },
+            })
+        );
+    } else if (streakCount === 0) {
+        // 0 streak
+        window.dispatchEvent(
+            new CustomEvent('open-streak-broken', {
+                detail: {
+                    mode: 'none',
+                    current_streak: 0,
+                    longest_streak: page.props.auth?.streak_broken?.longest_streak || 0,
+                },
+            })
+        );
+    }
 }
 </script>
 <template>
@@ -82,7 +110,9 @@ function handleStreakBadgeClick() {
                             :class="
                                 $page.props.auth.streak_active_today
                                     ? 'bg-orange-100 border-orange-200 text-orange-700 shadow-sm'
-                                    : 'bg-gray-100 border-gray-200 text-gray-600 hover:bg-gray-200/70'
+                                    : ($page.props.auth.streak ?? 0) > 0
+                                        ? 'bg-amber-50 border-amber-200 text-amber-800 hover:bg-amber-100/70'
+                                        : 'bg-gray-100 border-gray-200 text-gray-600 hover:bg-gray-200/70'
                             "
                             @click="handleStreakBadgeClick"
                             role="button"
@@ -98,7 +128,7 @@ function handleStreakBadgeClick() {
                                 {{ $page.props.auth.streak }} Hari Streak Aktif — Sudah Belajar Hari Ini 🔥
                             </span>
                             <span v-else-if="($page.props.auth.streak ?? 0) > 0">
-                                {{ $page.props.auth.streak }} Hari Streak — Belum Belajar Hari Ini, Yuk Lanjut!
+                                {{ $page.props.auth.streak }} Hari Streak (Api Mati) — Selesaikan 1 Soal Hari Ini! ⏳
                             </span>
                             <span v-else>
                                 Streak Belum Aktif — Belajar Hari Ini untuk Menyalakan Api!

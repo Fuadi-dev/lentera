@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { Accessibility, Minus, Plus, RotateCcw, Type, X } from 'lucide-vue-next';
+import { Minus, Plus, RotateCcw, Type, X } from 'lucide-vue-next';
+import { PhPersonArmsSpread } from '@phosphor-icons/vue';
 import { useAccessibilitySettings } from '@/Composables/useAccessibilitySettings';
 import { Button } from '@/Components/ui/button';
 import { Switch } from '@/Components/ui/switch';
@@ -38,13 +39,13 @@ function changeFontScale(amount: number): void {
 <template>
     <Drawer swipe-direction="right">
         <DrawerTrigger
-            class="fixed right-0 z-30 flex items-center justify-center text-white transition bg-orange-600 rounded-l-full shadow-lg top-20 size-12 hover:bg-orange-700 focus:outline-none focus:ring-4 focus:ring-orange-200"
+            class="fixed right-0 z-30 flex items-center justify-center text-white transition bg-orange-600 rounded-l-full shadow-lg top-36 sm:top-20 size-12 hover:bg-orange-700 focus:outline-none focus:ring-4 focus:ring-orange-200"
             aria-label="Buka pengaturan aksesibilitas"
         >
-            <Accessibility class="size-6" aria-hidden="true" />
+            <PhPersonArmsSpread class="size-6" weight="bold" aria-hidden="true" />
         </DrawerTrigger>
 
-        <DrawerContent class="p-5 bg-white">
+        <DrawerContent class="p-5 bg-white border-0 outline-none ring-0 shadow-2xl">
             <DrawerHeader class="p-0">
                 <div class="flex items-start justify-between gap-4">
                     <div>

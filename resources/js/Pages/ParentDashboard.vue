@@ -178,9 +178,6 @@ const confirmUnpair = () => {
                                             >
                                                 {{ child.name }}
                                             </h2>
-                                            <p class="text-xs text-muted-foreground">
-                                                {{ child.class }}
-                                            </p>
                                         </div>
                                     </div>
                                     <div class="flex items-center gap-3">
@@ -276,23 +273,52 @@ const confirmUnpair = () => {
                                         </p>
                                     </Card>
 
-                                    <Card class="min-h-[158px] border border-border p-4 shadow-sm">
-                                        <div class="flex items-center justify-between">
+                                    <Card class="flex min-h-[158px] flex-col justify-between border border-border p-4 shadow-sm">
+                                        <div>
+                                            <div class="flex items-center justify-between">
+                                                <p
+                                                    class="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                                                >
+                                                    Aktivitas terakhir
+                                                </p>
+                                                <span class="rounded-lg bg-primary/10 p-2 text-primary">
+                                                    <PhCalendarCheck :size="18" aria-hidden="true" />
+                                                </span>
+                                            </div>
+
+                                            <div v-if="child.lastActivityDetails" class="mt-3 space-y-1.5">
+                                                <div class="flex flex-wrap items-center gap-1.5">
+                                                    <span
+                                                        v-if="child.lastActivityDetails.subject"
+                                                        class="rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-bold text-primary"
+                                                    >
+                                                        {{ child.lastActivityDetails.subject }}
+                                                    </span>
+                                                    <span
+                                                        v-if="child.lastActivityDetails.chapterNumber"
+                                                        class="rounded-md bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground"
+                                                    >
+                                                        Bab {{ child.lastActivityDetails.chapterNumber }} • Unit {{ child.lastActivityDetails.unitOrder }}
+                                                    </span>
+                                                </div>
+                                                <p
+                                                    class="line-clamp-2 text-sm font-bold leading-snug text-foreground"
+                                                    :title="child.lastActivityDetails.unitTitle"
+                                                >
+                                                    {{ child.lastActivityDetails.unitTitle }}
+                                                </p>
+                                            </div>
                                             <p
-                                                class="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                                                v-else
+                                                class="mt-3 text-sm font-medium text-muted-foreground"
                                             >
-                                                Aktivitas terakhir
+                                                Belum ada aktivitas belajar
                                             </p>
-                                            <span class="rounded-lg bg-primary/10 p-2 text-primary">
-                                                <PhCalendarCheck :size="18" aria-hidden="true" />
-                                            </span>
                                         </div>
-                                        <p
-                                            class="mt-4 line-clamp-2 text-sm font-semibold leading-5 text-foreground"
-                                        >
-                                            {{ child.lastActivity }}
+
+                                        <p class="mt-3 text-xs text-muted-foreground">
+                                            {{ child.lastActivityDetails?.timeAgo || 'Belum ada aktivitas' }}
                                         </p>
-                                        <p class="mt-2 text-xs text-muted-foreground">Baru saja</p>
                                     </Card>
                                 </div>
 
@@ -403,7 +429,7 @@ const confirmUnpair = () => {
 
         <!-- Dialog Hubungkan Anak Menggunakan shadcn-vue dialog -->
         <Dialog v-model:open="isDialogOpen">
-            <DialogContent class="sm:max-w-md">
+            <DialogContent class="sm:max-w-md border-0 outline-none ring-0 bg-white shadow-xl">
                 <DialogHeader>
                     <div class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary sm:mx-0">
                         <PhUserPlus :size="24" weight="bold" />
@@ -463,7 +489,7 @@ const confirmUnpair = () => {
 
         <!-- Alert Dialog Putuskan Hubungan Akun Anak -->
         <AlertDialog v-model:open="isUnpairDialogOpen">
-            <AlertDialogContent class="border-0 ring-0 shadow-2xl outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0">
+            <AlertDialogContent class="border-0 ring-0 shadow-2xl outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 bg-white">
                 <AlertDialogHeader>
                     <div class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-destructive/10 text-destructive sm:mx-0">
                         <PhLinkBreak :size="24" weight="bold" />

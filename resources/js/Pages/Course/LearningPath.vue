@@ -474,7 +474,7 @@ function openMaterial({ event, node }) {
 
         <!-- Modal Alert ketika Siswa Menekan Level Terkunci -->
         <AlertDialog :open="isLockedModalOpen" @update:open="isLockedModalOpen = $event">
-            <AlertDialogContent class="border-2 rounded-2xl border-stone-800 shadow-2xl max-w-md">
+            <AlertDialogContent class="border-0 ring-0 outline-none rounded-2xl shadow-2xl max-w-md bg-white">
                 <AlertDialogHeader class="flex flex-col items-center text-center">
                     <div class="flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-100 text-amber-600 mb-2">
                         <PhLock :size="28" weight="bold" />

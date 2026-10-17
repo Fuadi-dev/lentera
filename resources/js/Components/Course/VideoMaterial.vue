@@ -38,17 +38,17 @@ function youtubeEmbedUrl() {
 </script>
 
 <template>
-    <Card class="min-h-full !overflow-visible">
-        <CardHeader>
-            <CardTitle class="text-2xl">{{ material.title }}</CardTitle>
-            <CardDescription>Video pembelajaran · {{ material.duration }}</CardDescription>
+    <Card class="w-full overflow-hidden shadow-sm bg-white rounded-3xl border border-slate-100">
+        <CardHeader class="p-6 sm:p-8 bg-white border-b border-slate-100">
+            <CardTitle class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{{ material.title }}</CardTitle>
+            <CardDescription class="text-sm text-slate-500 font-medium">Video pembelajaran · {{ material.duration }}</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent class="p-6 sm:p-8">
             <iframe
                 v-if="youtubeEmbedUrl()"
                 :src="youtubeEmbedUrl()"
                 :title="material.title"
-                class="w-full rounded-lg aspect-video"
+                class="w-full rounded-2xl aspect-video shadow-sm"
                 allow="
                     accelerometer;
                     autoplay;
@@ -63,7 +63,7 @@ function youtubeEmbedUrl() {
             <video
                 v-else
                 controls
-                class="w-full rounded-lg aspect-video bg-foreground"
+                class="w-full rounded-2xl aspect-video bg-foreground shadow-sm"
                 :src="material.media_url"
             >
                 Browser kamu tidak mendukung pemutar video.
@@ -75,7 +75,7 @@ function youtubeEmbedUrl() {
             :title="material.summaryTitle ?? 'Rangkuman Video'"
             :source="material.source"
         />
-        <CardFooter class="justify-between">
+        <CardFooter class="p-6 sm:p-8 pt-6 border-t border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
             <MarkUnitDoneButton :unit-id="material.id" :completed="completed" />
             <NextMaterialButton v-if="nextUnitHref" :href="nextUnitHref" :title="nextUnitTitle" />
         </CardFooter>

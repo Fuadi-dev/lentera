@@ -89,7 +89,7 @@ function closeModal() {
 
 <template>
     <Dialog :open="isOpen" @update:open="(val) => (isOpen = val)">
-        <DialogContent class="max-w-sm sm:max-w-md p-6 overflow-hidden text-center border-orange-200 bg-gradient-to-b from-orange-50/80 via-white to-amber-50/50 shadow-2xl rounded-2xl">
+        <DialogContent class="max-w-sm sm:max-w-md p-6 overflow-hidden text-center border-0 outline-none ring-0 bg-white shadow-2xl rounded-2xl">
             <div class="relative py-4 flex flex-col items-center">
                 <!-- Glowing Backdrop Halo -->
                 <div class="relative flex items-center justify-center w-28 h-28 my-2">
@@ -103,7 +103,7 @@ function closeModal() {
                 </div>
 
                 <DialogHeader class="items-center text-center space-y-2 mt-2">
-                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-100 border border-orange-200/80 text-orange-700 text-xs font-bold tracking-wide uppercase">
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-100 border border-orange-200 text-orange-700 text-xs font-bold tracking-wide uppercase">
                         <PhFire :size="16" weight="fill" class="text-orange-600 animate-bounce" />
                         <span>Streak Meningkat!</span>
                         <PhSparkle :size="14" weight="fill" class="text-amber-500" />
@@ -119,7 +119,7 @@ function closeModal() {
                 </DialogHeader>
 
                 <!-- Longest streak / record info if applicable -->
-                <div v-if="streakData?.longest_streak" class="mt-4 px-4 py-2 rounded-xl bg-orange-50/90 border border-orange-100 flex items-center gap-2 text-xs font-semibold text-orange-800">
+                <div v-if="streakData?.longest_streak" class="mt-4 px-4 py-2 rounded-xl bg-orange-50 border border-orange-100 flex items-center gap-2 text-xs font-semibold text-orange-800">
                     <span class="text-orange-500">🏆</span>
                     <span>Rekor streak terpanjangmu: <strong>{{ streakData.longest_streak }} hari</strong></span>
                 </div>
@@ -127,7 +127,7 @@ function closeModal() {
                 <div class="w-full mt-6">
                     <Button
                         type="button"
-                        class="w-full py-6 text-base font-bold text-white shadow-lg shadow-orange-500/25 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 rounded-xl transition-all duration-200 hover:shadow-orange-500/40 transform active:scale-[0.98]"
+                        class="w-full py-6 text-base font-bold text-white shadow-md shadow-orange-500/20 bg-orange-500 hover:bg-orange-600 rounded-xl transition-all duration-200 hover:shadow-orange-500/30 transform active:scale-[0.98]"
                         @click="closeModal"
                     >
                         Mantap, Lanjutkan! 🚀

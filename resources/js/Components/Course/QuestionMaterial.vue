@@ -179,10 +179,10 @@ function handleDragEnd(event) {
 </script>
 
 <template>
-    <Card class="h-full">
-        <CardHeader>
-            <CardTitle class="text-2xl">{{ material.title }}</CardTitle>
-            <CardDescription>{{ material.question }}</CardDescription>
+    <Card class="w-full overflow-hidden shadow-sm bg-white rounded-3xl border border-slate-100">
+        <CardHeader class="p-6 sm:p-8 bg-white border-b border-slate-100">
+            <CardTitle class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{{ material.title }}</CardTitle>
+            <CardDescription class="text-sm text-slate-500 font-medium">{{ material.question }}</CardDescription>
         </CardHeader>
         <CardContent>
             <DragDropProvider @dragEnd="handleDragEnd">
@@ -261,7 +261,7 @@ function handleDragEnd(event) {
                 </div>
             </DragDropProvider>
         </CardContent>
-        <CardFooter class="justify-between">
+        <CardFooter class="p-6 sm:p-8 pt-6 border-t border-slate-100 bg-slate-50/50 flex flex-col gap-4">
             <p
                 v-if="submitted"
                 class="text-sm font-semibold"
@@ -282,31 +282,35 @@ function handleDragEnd(event) {
                     }}
                 </template>
             </p>
-            <div class="flex gap-3">
-                <Button
-                    v-if="submitted && !isAnswerCorrect(material)"
-                    type="button"
-                    variant="outline"
-                    class="gap-2"
-                    @click="retryQuestion"
-                >
-                    <RotateCcw class="w-4 h-4" />
-                    Coba lagi
-                </Button>
-                <Button
-                    type="button"
-                    :disabled="submitted && isAnswerCorrect(material)"
-                    @click="checkAnswer"
-                >
-                    {{ submitted && isAnswerCorrect(material) ? 'Benar!' : 'Periksa jawaban' }}
-                </Button>
-                <MarkUnitDoneButton :unit-id="material.id" :completed="props.completed || unitMarkedDone" />
+
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 w-full">
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <Button
+                        v-if="submitted && !isAnswerCorrect(material)"
+                        type="button"
+                        variant="outline"
+                        class="gap-2 rounded-xl"
+                        @click="retryQuestion"
+                    >
+                        <RotateCcw class="w-4 h-4" />
+                        Coba lagi
+                    </Button>
+                    <Button
+                        type="button"
+                        class="rounded-xl font-semibold shadow-sm"
+                        :disabled="submitted && isAnswerCorrect(material)"
+                        @click="checkAnswer"
+                    >
+                        {{ submitted && isAnswerCorrect(material) ? 'Benar!' : 'Periksa jawaban' }}
+                    </Button>
+                    <MarkUnitDoneButton :unit-id="material.id" :completed="props.completed || unitMarkedDone" />
+                </div>
+                <NextMaterialButton
+                    v-if="nextUnitHref"
+                    :href="nextUnitHref"
+                    :title="nextUnitTitle"
+                />
             </div>
-            <NextMaterialButton
-                v-if="nextUnitHref"
-                :href="nextUnitHref"
-                :title="nextUnitTitle"
-            />
         </CardFooter>
     </Card>
 </template>

@@ -14,6 +14,7 @@ const page = usePage();
 const showingNavigationDropdown = ref(false);
 const streakBump = ref(false);
 const streakExtinguished = ref(false);
+const streakNudge = ref(false);
 
 function triggerStreakBump() {
     streakBump.value = false;
@@ -31,18 +32,56 @@ function triggerStreakExtinguished() {
     });
 }
 
+function triggerStreakNudge() {
+    streakNudge.value = false;
+    requestAnimationFrame(() => {
+        streakNudge.value = true;
+        setTimeout(() => (streakNudge.value = false), 800);
+    });
+}
+
 function handleStreakWidgetClick() {
-    if (page.props.auth?.streak_active_today) {
+    const isToday = page.props.auth?.streak_active_today;
+    const streakCount = Number(page.props.auth?.streak ?? 0);
+    const isBroken = page.props.auth?.streak_broken?.is_broken;
+
+    if (isToday) {
+        // Streak is lit and active today!
         triggerStreakBump();
-    } else {
+    } else if (isBroken) {
+        // Genuinely broken (didiamkan kemarin sampai ganti hari, reset ke 0)
         triggerStreakExtinguished();
         window.dispatchEvent(
             new CustomEvent('open-streak-broken', {
                 detail: {
-                    previous_streak:
-                        page.props.auth?.streak_broken?.previous_streak ||
-                        (page.props.auth?.streak > 0 ? page.props.auth?.streak : 3),
-                    longest_streak: page.props.auth?.streak_broken?.longest_streak || 5,
+                    mode: 'broken',
+                    previous_streak: page.props.auth?.streak_broken?.previous_streak || 1,
+                    longest_streak: page.props.auth?.streak_broken?.longest_streak || 1,
+                },
+            })
+        );
+    } else if (streakCount > 0) {
+        // Streak is inactive today (mati), TAPI TIDAK RESET KE 0!
+        // Do NOT trigger broken/extinguish animation. Trigger a gentle nudge reminder.
+        triggerStreakNudge();
+        window.dispatchEvent(
+            new CustomEvent('open-streak-broken', {
+                detail: {
+                    mode: 'reminder',
+                    current_streak: streakCount,
+                    longest_streak: page.props.auth?.streak_broken?.longest_streak || streakCount,
+                },
+            })
+        );
+    } else {
+        // 0 streak (no streak yet)
+        triggerStreakNudge();
+        window.dispatchEvent(
+            new CustomEvent('open-streak-broken', {
+                detail: {
+                    mode: 'none',
+                    current_streak: 0,
+                    longest_streak: page.props.auth?.streak_broken?.longest_streak || 0,
                 },
             })
         );
@@ -120,6 +159,7 @@ watch(
                                                 :class="[
                                                     $page.props.auth.streak_active_today ? 'drop-shadow-sm hover:scale-105' : 'hover:scale-105',
                                                     streakBump ? 'streak-flame-bump' : '',
+                                                    streakNudge ? 'streak-flame-nudge' : '',
                                                     streakExtinguished ? 'streak-flame-extinguished' : '',
                                                 ]"
                                             />
@@ -140,7 +180,7 @@ watch(
                                             Streak {{ $page.props.auth.streak }} hari (Aktif hari ini! 🔥)
                                         </span>
                                         <span v-else-if="($page.props.auth.streak ?? 0) > 0">
-                                            Streak {{ $page.props.auth.streak }} hari (Belajar hari ini untuk menyalakan api!)
+                                            Streak {{ $page.props.auth.streak }} hari (Api mati hari ini — selesaikan 1 materi agar tidak reset ke 0 besok!)
                                         </span>
                                         <span v-else>
                                             Belum ada streak (Yuk belajar hari ini untuk menyalakan api!)
@@ -197,18 +237,29 @@ watch(
                             <TooltipProvider v-if="$page.props.auth.user?.role === 'child'">
                                 <Tooltip>
                                     <TooltipTrigger as-child>
-                                        <div class="flex items-center me-2 select-none">
+                                        <div
+                                            class="flex items-center me-2 select-none cursor-pointer"
+                                            @click="handleStreakWidgetClick"
+                                            role="button"
+                                            tabindex="0"
+                                            title="Klik untuk melihat status api belajarmu"
+                                        >
                                             <img
                                                 :src="$page.props.auth.streak_active_today ? '/images/ui/streak.png' : '/images/ui/not streak.png'"
                                                 alt="Streak"
                                                 class="object-contain w-9 h-9 transition-all duration-300"
-                                                :class="streakBump ? 'streak-flame-bump' : ''"
+                                                :class="[
+                                                    streakBump ? 'streak-flame-bump' : '',
+                                                    streakNudge ? 'streak-flame-nudge' : '',
+                                                    streakExtinguished ? 'streak-flame-extinguished' : '',
+                                                ]"
                                             />
                                             <span
                                                 :class="[
                                                     'text-sm font-bold transition-colors duration-200',
                                                     $page.props.auth.streak_active_today ? 'text-orange-500' : 'text-gray-400',
                                                     streakBump ? 'streak-number-bump' : '',
+                                                    streakExtinguished ? 'streak-number-broken' : '',
                                                 ]"
                                             >
                                                 {{ $page.props.auth.streak ?? 0 }}
@@ -220,7 +271,7 @@ watch(
                                             Streak {{ $page.props.auth.streak }} hari (Aktif hari ini! 🔥)
                                         </span>
                                         <span v-else-if="($page.props.auth.streak ?? 0) > 0">
-                                            Streak {{ $page.props.auth.streak }} hari (Belajar hari ini untuk menyalakan api!)
+                                            Streak {{ $page.props.auth.streak }} hari (Api mati hari ini — selesaikan 1 materi agar tidak reset ke 0 besok!)
                                         </span>
                                         <span v-else>
                                             Belum ada streak (Yuk belajar hari ini untuk menyalakan api!)
@@ -362,6 +413,18 @@ watch(
 
 .streak-flame-extinguished {
     animation: streak-flame-extinguished 1.2s ease-out;
+}
+
+@keyframes streak-flame-nudge {
+    0% { transform: scale(1) rotate(0deg); }
+    25% { transform: scale(1.15) rotate(-8deg); }
+    50% { transform: scale(1.15) rotate(8deg); }
+    75% { transform: scale(1.08) rotate(-4deg); }
+    100% { transform: scale(1) rotate(0deg); }
+}
+
+.streak-flame-nudge {
+    animation: streak-flame-nudge 0.6s ease-in-out;
 }
 
 .streak-number-broken {

@@ -39,11 +39,15 @@ class HandleInertiaRequests extends Middleware
                 'streak_active_today' => fn () => $request->user()?->role === 'child'
                     ? ($request->user()->student?->streak?->is_active_today ?? false)
                     : false,
+                'streak_inactive_today' => fn () => $request->user()?->role === 'child'
+                    ? ($request->user()->student?->streak?->is_inactive_today ?? false)
+                    : false,
                 'streak_broken' => fn () => $request->user()?->role === 'child'
                     ? [
                         'is_broken' => $request->user()->student?->streak?->is_broken ?? false,
                         'previous_streak' => $request->user()->student?->streak?->broken_streak_count ?? 0,
                         'longest_streak' => $request->user()->student?->streak?->longest_streak ?? 0,
+                        'last_activity_date' => $request->user()->student?->streak?->last_activity_date?->toDateString(),
                     ]
                     : null,
             ],
