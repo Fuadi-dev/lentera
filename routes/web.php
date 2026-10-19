@@ -5,6 +5,7 @@ use App\Http\Controllers\CourseController;
 use App\Http\Controllers\CourseProgressController;
 use App\Http\Controllers\ParentDashboardController;
 use App\Http\Controllers\ProfileController;
+use App\Models\Subject;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -23,7 +24,9 @@ Route::get('/dashboard', function () {
         return app(ParentDashboardController::class)->index(request());
     }
 
-    return Inertia::render('Dashboard');
+    return Inertia::render('Dashboard', [
+        'courses' => Subject::select('id', 'title', 'description', 'thumbnail')->get(),
+    ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware(['auth', 'verified'])->group(function () {

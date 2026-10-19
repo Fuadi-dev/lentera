@@ -6,14 +6,32 @@ import { PhArrowRight, PhMagnifyingGlass } from '@phosphor-icons/vue';
 import Button from '@/Components/ui/button/Button.vue';
 import Card from '@/Components/ui/card/Card.vue';
 import Input from '@/Components/ui/input/Input.vue';
-import coursesData from '../../../data/courses.json';
 
 const page = usePage();
 
 const props = defineProps({
     courses: {
         type: Array,
-        default: () => coursesData,
+        default: () => [
+            {
+                id: 1,
+                title: 'Matematika',
+                description: 'Petualangan seru menaklukkan angka dan logika dari Kelas 1 sampai 6. Ubah hitungan sulit jadi asyik!',
+                thumbnail: '/images/subjects/mtk.jpg',
+            },
+            {
+                id: 2,
+                title: 'Bahasa Indonesia',
+                description: 'Jelajahi kata dan cerita seru. Asah kemampuan membaca, menulis, dan jadilah pencerita hebat!.',
+                thumbnail: '/images/subjects/bindo.jpg',
+            },
+            {
+                id: 3,
+                title: 'Bahasa Inggris',
+                description: 'Buka jendela dunia bersama Si Lentera! Pelajari vocab, cerita menarik, dan percakapan dasar dengan mudah.',
+                thumbnail: '/images/subjects/bing.jpg',
+            },
+        ],
     },
 });
 
