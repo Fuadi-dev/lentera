@@ -13,6 +13,7 @@ use App\Models\Student;
 use App\Models\Subject;
 use App\Models\Unit;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class DatabaseSeeder extends Seeder
 {
@@ -29,24 +30,36 @@ class DatabaseSeeder extends Seeder
             ['parent_id' => $parent->id]
         );
 
-        // 2. Baca file JSON
-        $jsonPath = base_path('data/courses.json');
-        if (! file_exists($jsonPath)) {
-            $this->command->warn('File courses.json tidak ditemukan!');
+        // 2. Baca file JSON kurikulum
+        $splitFiles = [
+            'matematika.json',
+            'bahasa_indonesia.json',
+            'bahasa_inggris.json',
+        ];
+
+        $subjectPayloads = [];
+        foreach ($splitFiles as $fileName) {
+            $path = base_path("data/{$fileName}");
+            if (file_exists($path)) {
+                $decoded = json_decode(file_get_contents($path), true);
+                if ($decoded) {
+                    $subjectPayloads[] = $decoded;
+                }
+            }
+        }
+
+        if (empty($subjectPayloads)) {
+            $this->command->warn('File kurikulum (matematika.json, bahasa_indonesia.json, bahasa_inggris.json) tidak ditemukan di direktori data/!');
 
             return;
         }
 
-        $json = file_get_contents($jsonPath);
-        $subjects = json_decode($json, true);
+        DB::disableQueryLog();
 
-        if (! $subjects) {
-            $this->command->warn('Gagal membaca atau mem-parsing courses.json!');
-
-            return;
-        }
-
-        foreach ($subjects as $subjectData) {
+        foreach ($subjectPayloads as $subjectData) {
+            if (! isset($subjectData['id']) && is_array($subjectData) && isset($subjectData[0]['id'])) {
+                $subjectData = $subjectData[0];
+            }
             $subject = Subject::updateOrCreate(
                 ['id' => $subjectData['id']],
                 [
@@ -58,145 +71,153 @@ class DatabaseSeeder extends Seeder
 
             if (isset($subjectData['classes'])) {
                 foreach ($subjectData['classes'] as $classData) {
-                    $class = Classes::updateOrCreate(
-                        ['id' => $classData['id']],
-                        [
-                            'subject_id' => $subject->id,
-                            'number' => $classData['number'],
-                            'title' => $classData['title'],
-                            'description' => $classData['description'] ?? null,
-                        ]
-                    );
+                    $this->command->info("Seeding: {$subject->title} - {$classData['title']}...");
 
-                    if (isset($classData['levels'])) {
-                        foreach ($classData['levels'] as $levelData) {
-                            $level = Level::updateOrCreate(
-                                ['id' => $levelData['id']],
-                                [
-                                    'class_id' => $class->id,
-                                    'number' => $levelData['number'],
-                                    'title' => $levelData['title'],
-                                    'description' => $levelData['description'] ?? null,
-                                ]
-                            );
+                    DB::transaction(function () use ($subject, $classData) {
+                        Classes::where('id', $classData['id'])->delete();
 
-                            if (isset($levelData['chapters'])) {
-                                foreach ($levelData['chapters'] as $chapterData) {
-                                    $chapter = Chapter::updateOrCreate(
-                                        ['id' => $chapterData['id']],
-                                        [
-                                            'level_id' => $level->id,
-                                            'number' => $chapterData['number'],
-                                            'title' => $chapterData['title'],
-                                            'description' => $chapterData['description'] ?? null,
-                                        ]
-                                    );
+                        $class = Classes::updateOrCreate(
+                            ['id' => $classData['id']],
+                            [
+                                'subject_id' => $subject->id,
+                                'number' => $classData['number'],
+                                'title' => $classData['title'],
+                                'description' => $classData['description'] ?? null,
+                            ]
+                        );
 
-                                    if (isset($chapterData['units'])) {
-                                        foreach ($chapterData['units'] as $unitData) {
-                                            $unit = Unit::updateOrCreate(
-                                                ['id' => $unitData['id']],
-                                                [
-                                                    'chapter_id' => $chapter->id,
-                                                    'order' => $unitData['order'],
-                                                    'type' => $unitData['type'],
-                                                    'title' => $unitData['title'],
-                                                    'content' => $unitData['content'] ?? null,
-                                                    'media_url' => $unitData['url'] ?? null,
-                                                    'duration' => $unitData['duration'] ?? null,
-                                                    'passing_score' => $unitData['passingScore'] ?? null,
-                                                ]
-                                            );
+                        if (isset($classData['levels'])) {
+                            foreach ($classData['levels'] as $levelData) {
+                                $level = Level::updateOrCreate(
+                                    ['id' => $levelData['id']],
+                                    [
+                                        'class_id' => $class->id,
+                                        'number' => $levelData['number'],
+                                        'title' => $levelData['title'],
+                                        'description' => $levelData['description'] ?? null,
+                                    ]
+                                );
 
-                                            $unitQuestions = $unitData['questions'] ?? [];
-                                            if ($unitData['type'] === 'question' && ! $unitQuestions) {
-                                                $unitQuestions = [$unitData];
-                                            }
+                                if (isset($levelData['chapters'])) {
+                                    foreach ($levelData['chapters'] as $chapterData) {
+                                        $chapter = Chapter::updateOrCreate(
+                                            ['id' => $chapterData['id']],
+                                            [
+                                                'level_id' => $level->id,
+                                                'number' => $chapterData['number'],
+                                                'title' => $chapterData['title'],
+                                                'description' => $chapterData['description'] ?? null,
+                                            ]
+                                        );
 
-                                            foreach ($unitQuestions as $qData) {
-                                                if ($unitData['type'] === 'question' && ! isset($qData['id'])) {
-                                                    $qData['id'] = 'q-'.$unitData['id'].'-001';
-                                                }
-
-                                                if ($unitData['type'] === 'question') {
-                                                    $qData['id'] = 'q-'.$unitData['id'].'-001';
-                                                    $qData['type'] = 'dropzone';
-                                                }
-
-                                                // Map answer ids if options exist to make them globally unique
-                                                $rawAnswer = $qData['answer'] ?? [];
-                                                $mappedAnswer = $rawAnswer;
-
-                                                if (isset($qData['options'])) {
-                                                    $rawAnswer = is_array($rawAnswer) ? $rawAnswer : [$rawAnswer];
-                                                    $mappedAnswer = [];
-                                                    foreach ($rawAnswer as $ans) {
-                                                        $mappedAnswer[] = $qData['id'].'-'.$ans;
-                                                    }
-                                                }
-
-                                                $question = Question::updateOrCreate(
-                                                    ['id' => $qData['id']],
+                                        if (isset($chapterData['units'])) {
+                                            foreach ($chapterData['units'] as $unitData) {
+                                                $unit = Unit::updateOrCreate(
+                                                    ['id' => $unitData['id']],
                                                     [
-                                                        'unit_id' => $unit->id,
-                                                        'type' => $qData['type'],
-                                                        'question' => $qData['question'],
-                                                        'answer' => $mappedAnswer,
-                                                        'explanation' => $qData['explanation'] ?? null,
-                                                        'points' => $qData['points'] ?? 10,
+                                                        'chapter_id' => $chapter->id,
+                                                        'order' => $unitData['order'],
+                                                        'type' => $unitData['type'],
+                                                        'title' => $unitData['title'],
+                                                        'content' => $unitData['content'] ?? null,
+                                                        'media_url' => $unitData['url'] ?? null,
+                                                        'duration' => $unitData['duration'] ?? null,
+                                                        'passing_score' => $unitData['passingScore'] ?? null,
                                                     ]
                                                 );
 
-                                                if (isset($qData['options']) || isset($qData['items'])) {
-                                                    QuestionOption::where('question_id', $question->id)->delete();
+                                                $unitQuestions = $unitData['questions'] ?? [];
+                                                if ($unitData['type'] === 'question' && ! $unitQuestions) {
+                                                    $unitQuestions = [$unitData];
                                                 }
 
-                                                if (isset($qData['options'])) {
-                                                    foreach ($qData['options'] as $optData) {
-                                                        QuestionOption::updateOrCreate(
-                                                            ['id' => $qData['id'].'-'.$optData['id']],
-                                                            [
-                                                                'question_id' => $question->id,
-                                                                'text' => $optData['text'],
-                                                            ]
-                                                        );
+                                                foreach ($unitQuestions as $qData) {
+                                                    if ($unitData['type'] === 'question' && ! isset($qData['id'])) {
+                                                        $qData['id'] = 'q-'.$unitData['id'].'-001';
                                                     }
-                                                }
 
-                                                if (isset($qData['items'])) {
-                                                    foreach ($qData['items'] as $itemData) {
-                                                        QuestionOption::updateOrCreate(
-                                                            ['id' => $qData['id'].'-'.$itemData['id']],
-                                                            [
-                                                                'question_id' => $question->id,
-                                                                'text' => $itemData['label'] ?? $itemData['text'] ?? '',
-                                                            ]
-                                                        );
+                                                    if ($unitData['type'] === 'question') {
+                                                        $qData['id'] = 'q-'.$unitData['id'].'-001';
+                                                        $qData['type'] = 'dropzone';
+                                                    }
+
+                                                    // Map answer ids if options exist to make them globally unique
+                                                    $rawAnswer = $qData['answer'] ?? [];
+                                                    $mappedAnswer = $rawAnswer;
+
+                                                    if (isset($qData['options'])) {
+                                                        $rawAnswer = is_array($rawAnswer) ? $rawAnswer : [$rawAnswer];
+                                                        $mappedAnswer = [];
+                                                        foreach ($rawAnswer as $ans) {
+                                                            $mappedAnswer[] = $qData['id'].'-'.$ans;
+                                                        }
+                                                    }
+
+                                                    $question = Question::updateOrCreate(
+                                                        ['id' => $qData['id']],
+                                                        [
+                                                            'unit_id' => $unit->id,
+                                                            'type' => $qData['type'],
+                                                            'question' => $qData['question'],
+                                                            'answer' => $mappedAnswer,
+                                                            'explanation' => $qData['explanation'] ?? null,
+                                                            'points' => $qData['points'] ?? 10,
+                                                        ]
+                                                    );
+
+                                                    if (isset($qData['options']) || isset($qData['items'])) {
+                                                        QuestionOption::where('question_id', $question->id)->delete();
+                                                    }
+
+                                                    if (isset($qData['options'])) {
+                                                        foreach ($qData['options'] as $optData) {
+                                                            QuestionOption::updateOrCreate(
+                                                                ['id' => $qData['id'].'-'.$optData['id']],
+                                                                [
+                                                                    'question_id' => $question->id,
+                                                                    'text' => $optData['text'],
+                                                                ]
+                                                            );
+                                                        }
+                                                    }
+
+                                                    if (isset($qData['items'])) {
+                                                        foreach ($qData['items'] as $itemData) {
+                                                            QuestionOption::updateOrCreate(
+                                                                ['id' => $qData['id'].'-'.$itemData['id']],
+                                                                [
+                                                                    'question_id' => $question->id,
+                                                                    'text' => $itemData['label'] ?? $itemData['text'] ?? '',
+                                                                ]
+                                                            );
+                                                        }
                                                     }
                                                 }
                                             }
                                         }
-                                    }
 
-                                    if (isset($chapterData['finalTest'])) {
-                                        FinalTest::updateOrCreate(
-                                            ['chapter_id' => $chapter->id],
-                                            [
-                                                'title' => $chapterData['finalTest']['title'],
-                                                'minimum_score' => $chapterData['finalTest']['minimumScore'],
-                                                'question_count' => $chapterData['finalTest']['questionCount'],
-                                                'unlocks_next_level' => $chapterData['finalTest']['unlocksNextLevel'] ?? false,
-                                            ]
-                                        );
+                                        if (isset($chapterData['finalTest'])) {
+                                            FinalTest::updateOrCreate(
+                                                ['chapter_id' => $chapter->id],
+                                                [
+                                                    'title' => $chapterData['finalTest']['title'],
+                                                    'minimum_score' => $chapterData['finalTest']['minimumScore'],
+                                                    'question_count' => $chapterData['finalTest']['questionCount'],
+                                                    'unlocks_next_level' => $chapterData['finalTest']['unlocksNextLevel'] ?? false,
+                                                ]
+                                            );
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
+                    });
+
+                    $this->command->info("Completed: {$subject->title} - {$classData['title']}");
                 }
             }
         }
 
-        $this->command->info('Data berhasil di-seed dari courses.json!');
+        $this->command->info('Data kurikulum berhasil di-seed!');
     }
 }
