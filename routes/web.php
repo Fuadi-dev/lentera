@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AiChatController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\CourseProgressController;
@@ -39,6 +40,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('/parent/children/pair', [ParentDashboardController::class, 'pairChild'])->name('parent.children.pair');
     Route::delete('/parent/children/{student}/unpair', [ParentDashboardController::class, 'unpairChild'])->name('parent.children.unpair');
+
+    Route::post('/ai/chat/sessions', [AiChatController::class, 'storeSession'])->name('ai.chat.sessions.store');
+    Route::post('/ai/chat/sessions/{session}/messages', [AiChatController::class, 'storeMessage'])->name('ai.chat.messages.store');
 });
 
 Route::middleware('auth')->group(function () {
