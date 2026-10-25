@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import ChatTutor from '@/Components/Course/ChatTutor.vue';
 import CourseMaterialSidebar from '@/Components/Course/CourseMaterialSidebar.vue';
 import QuestionMaterial from '@/Components/Course/QuestionMaterial.vue';
 import QuizActivity from '@/Components/Course/QuizActivity.vue';
@@ -286,5 +287,7 @@ function handleQuizCompleted(result) {
                 </div>
             </div>
         </div>
+
+        <ChatTutor :unit="material" />
     </AuthenticatedLayout>
 </template>
