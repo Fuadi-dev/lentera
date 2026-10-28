@@ -38,10 +38,13 @@ RUN apk add --no-cache \
     zip \
     unzip \
     oniguruma-dev \
+    postgresql-dev \
     linux-headers
 
 # Install PHP extensions needed by Laravel
 RUN docker-php-ext-install \
+    pdo_pgsql \
+    pgsql \
     pdo_mysql \
     mbstring \
     exif \
