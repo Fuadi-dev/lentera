@@ -1,0 +1,106 @@
+services:
+  # ---------------------------------------------------------
+  # App Service: PHP-FPM
+  # ---------------------------------------------------------
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lentera_app
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - storage_data:/var/www/html/storage
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - lentera_network
+
+  # ---------------------------------------------------------
+  # Web Service: Nginx
+  # ---------------------------------------------------------
+  web:
+    image: nginx:alpine
+    container_name: lentera_web
+    restart: unless-stopped
+    ports:
+      - "8085:80"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - storage_data:/var/www/html/storage:ro
+    depends_on:
+      - app
+    networks:
+      - lentera_network
+
+  # ---------------------------------------------------------
+  # Queue Worker: Laravel Queue
+  # ---------------------------------------------------------
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lentera_queue
+    restart: unless-stopped
+    command: ["php", "artisan", "queue:work", "--tries=3", "--timeout=90"]
+    env_file:
+      - .env
+    volumes:
+      - storage_data:/var/www/html/storage
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - lentera_network
+
+  # ---------------------------------------------------------
+  # Scheduler: Laravel Schedule Runner
+  # ---------------------------------------------------------
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lentera_scheduler
+    restart: unless-stopped
+    command: ["php", "artisan", "schedule:work"]
+    env_file:
+      - .env
+    volumes:
+      - storage_data:/var/www/html/storage
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - lentera_network
+
+  # ---------------------------------------------------------
+  # Database Service: MariaDB
+  # ---------------------------------------------------------
+  db:
+    image: mariadb:10.11
+    container_name: lentera_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-lentera}
+      MYSQL_USER: ${DB_USERNAME:-lentera_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-lentera_secret}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_secret}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lentera_network
+
+networks:
+  lentera_network:
+    driver: bridge
+
+volumes:
+  storage_data:
+  db_data:
