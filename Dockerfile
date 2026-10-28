@@ -30,7 +30,7 @@ RUN npm run build
 # -----------------------------------------------------------
 # Stage 3: Production PHP-FPM Application Image
 # -----------------------------------------------------------
-FROM php:8.3-fpm-alpine AS app
+FROM php:8.4-fpm-alpine AS app
 
 # Install system packages
 RUN apk add --no-cache \
@@ -42,7 +42,8 @@ RUN apk add --no-cache \
     unzip \
     oniguruma-dev \
     postgresql-dev \
-    linux-headers
+    linux-headers \
+    su-exec
 
 # Install PHP extensions needed by Laravel
 RUN docker-php-ext-install \
@@ -79,3 +80,11 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["php-fpm"]
+
+# -----------------------------------------------------------
+# Stage 4: Production Nginx Web Server
+# -----------------------------------------------------------
+FROM nginx:alpine AS web
+
+COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
+COPY --from=app /var/www/html/public /var/www/html/public
