@@ -1,17 +1,5 @@
 # -----------------------------------------------------------
-# Stage 1: Build Frontend (Inertia + Vue 3 + Vite)
-# -----------------------------------------------------------
-FROM node:20-alpine AS frontend
-WORKDIR /app
-
-COPY package.json package-lock.json* pnpm-lock.yaml* ./
-RUN npm ci || npm install
-
-COPY . .
-RUN npm run build
-
-# -----------------------------------------------------------
-# Stage 2: Install Composer Dependencies
+# Stage 1: Install Composer Dependencies
 # -----------------------------------------------------------
 FROM composer:2 AS vendor
 WORKDIR /app
@@ -23,6 +11,21 @@ RUN composer install \
     --prefer-dist \
     --optimize-autoloader \
     --no-scripts
+
+# -----------------------------------------------------------
+# Stage 2: Build Frontend (Inertia + Vue 3 + Vite)
+# -----------------------------------------------------------
+FROM node:20-alpine AS frontend
+WORKDIR /app
+
+COPY package.json package-lock.json* pnpm-lock.yaml* ./
+RUN npm ci || npm install
+
+COPY . .
+# Copy vendor from composer stage so Ziggy and vendor assets are available during build
+COPY --from=vendor /app/vendor ./vendor
+
+RUN npm run build
 
 # -----------------------------------------------------------
 # Stage 3: Production PHP-FPM Application Image
