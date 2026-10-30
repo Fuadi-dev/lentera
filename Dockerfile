@@ -25,6 +25,11 @@ COPY . .
 # Copy vendor from composer stage so Ziggy and vendor assets are available during build
 COPY --from=vendor /app/vendor ./vendor
 
+# VITE_* variables are baked into the bundle at build time, not runtime.
+# Pass via --build-arg VITE_APP_NAME=YourApp during docker compose build.
+ARG VITE_APP_NAME=Lentera
+ENV VITE_APP_NAME=${VITE_APP_NAME}
+
 RUN npm run build
 
 # -----------------------------------------------------------
