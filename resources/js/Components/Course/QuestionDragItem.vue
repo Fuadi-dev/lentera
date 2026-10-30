@@ -32,6 +32,6 @@ const { draggable, isDragging } = useDraggable({
         :aria-label="`Seret ${label}`"
     >
         <img v-if="image" :src="image" :alt="label" class="object-contain size-10" />
-        <span class="truncate max-w-28">{{ label }}</span>
+        <span class="text-center break-words w-full">{{ label }}</span>
     </button>
 </template>
